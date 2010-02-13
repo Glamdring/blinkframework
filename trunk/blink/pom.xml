@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.blink</groupId>
+    <artifactId>blink</artifactId>
+    <packaging>jar</packaging>
+    <version>1.0</version>
+    <name>blink</name>
+
+    <repositories>
+        <repository>
+            <id>java.net</id>
+            <url>
+                http://download.java.net/maven/2/
+            </url>
+        </repository>
+
+        <repository>
+            <id>jboss</id>
+            <url>http://repository.jboss.com/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+
+        <repository>
+            <id>apache-incubating</id>
+            <name>Apache Incubating Repository</name>
+            <url>http://people.apache.org/repo/m2-incubating-repository/</url>
+        </repository>
+        <repository>
+            <id>apache-incubating</id>
+            <name>Apache Incubating Repository</name>
+            <url>http://people.apache.org/repo/m2-incubating-repository/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.7</version>
+        </dependency>
+        <dependency>
+        	<groupId>aspectj</groupId>
+        	<artifactId>aspectjrt</artifactId>
+        	<version>1.5.4</version>
+        </dependency>
+        <dependency>
+        	<groupId>cglib</groupId>
+        	<artifactId>cglib</artifactId>
+        	<version>2.2</version>
+        </dependency>
+        <dependency>
+        	<groupId>javax.inject</groupId>
+        	<artifactId>javax.inject</artifactId>
+        	<version>1</version>
+        </dependency>
+        <dependency>
+        	<groupId>javax.enterprise</groupId>
+        	<artifactId>cdi-api</artifactId>
+        	<version>1.0-SP1</version>
+        </dependency>
+    </dependencies>
+</project>
