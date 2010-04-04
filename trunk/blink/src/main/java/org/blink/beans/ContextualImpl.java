@@ -6,8 +6,8 @@ import javax.enterprise.context.spi.CreationalContext;
 public class ContextualImpl<T> implements Contextual<T> {
 
     @Override
-    public T create(CreationalContext<T> paramCreationalContext) {
-        // TODO Auto-generated method stub
+    public T create(CreationalContext<T> ctx) {
+        //TODO
         return null;
     }
 

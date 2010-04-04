@@ -18,14 +18,16 @@ public class BeanImpl<T> extends ContextualImpl<T> implements Bean<T> {
     private Class<? extends Annotation> scope;
     private boolean nullable;
 
-    protected BeanImpl(Class<?> clazz) {
+    public BeanImpl(Class<?> clazz) {
         beanClass = clazz;
+    }
+
+    public void init(BeanPropertiesResolver resolver) {
     }
 
     @Override
     public Class<?> getBeanClass() {
-        // TODO Auto-generated method stub
-        return null;
+        return beanClass;
     }
 
     @Override
@@ -74,5 +76,9 @@ public class BeanImpl<T> extends ContextualImpl<T> implements Bean<T> {
     public boolean isNullable() {
         // TODO Auto-generated method stub
         return false;
+    }
+
+    public void resolveProperties() {
+
     }
 }

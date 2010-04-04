@@ -2,7 +2,6 @@ package org.blink.beans;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,10 +21,19 @@ import javax.enterprise.inject.spi.InterceptionType;
 import javax.enterprise.inject.spi.Interceptor;
 import javax.enterprise.inject.spi.ObserverMethod;
 
+import org.blink.types.AnnotatedTypeImpl;
+
 public class BeanManagerImpl implements ConfigurableBeanManager {
 
-    private Set<Bean> beans;
+    private Set<Bean<?>> beans;
 
+    public BeanManagerImpl(Set<Bean<?>> beans) {
+        this.beans = beans;
+    }
+
+    public Set<Bean<?>> getBeans() {
+        return beans;
+    }
     private Map<Class<? extends Annotation>, Context> contexts =
         new ConcurrentHashMap<Class<? extends Annotation>, Context>();
 
@@ -36,8 +44,8 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
 
     @Override
     public <T> AnnotatedType<T> createAnnotatedType(Class<T> paramClass) {
-        // TODO Auto-generated method stub
-        return null;
+        AnnotatedType<T> annotatedType = new AnnotatedTypeImpl<T>(paramClass);
+        return annotatedType;
     }
 
     @Override
@@ -205,14 +213,4 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         // TODO Auto-generated method stub
         return null;
     }
-
-    @Override
-    public void setClasses(Set<Class<?>> classes) {
-        beans = new HashSet<Bean>();
-        
-        for (Class<?> clazz : classes) {
-        	
-        }
-    }
-
 }

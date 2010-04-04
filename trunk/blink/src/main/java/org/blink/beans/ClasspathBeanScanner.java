@@ -12,7 +12,7 @@ import org.scannotation.ClasspathUrlFinder;
 
 public class ClasspathBeanScanner implements BeanScanner {
 
-    private AnnotationDB annotationDb;
+    private AnnotationDB annotationDb = new AnnotationDB();
 
     @Override
     public Set<Class<?>> findBeans() {
