@@ -18,6 +18,7 @@ public class Bootstrap {
     private BeanScanner beanScanner;
     private ConfigurableBeanManager beanManager;
 
+    @SuppressWarnings("unchecked")
     public BeanManager initialize() {
         try {
             beanScanner = new ClasspathBeanScanner();
@@ -27,9 +28,9 @@ public class Bootstrap {
 
             for (Class<?> clazz : classes) {
                 Bean<?> bean = new BeanImpl(clazz);
+                beans.add(bean);
             }
             beanManager = new BeanManagerImpl(beans);
-
 
             return beanManager;
 

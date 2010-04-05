@@ -2,6 +2,8 @@ package org.blink.beans;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +31,15 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
 
     public BeanManagerImpl(Set<Bean<?>> beans) {
         this.beans = beans;
+
+        initializeAnnotatedTypes();
+
+    }
+
+    private void initializeAnnotatedTypes() {
+        for (Bean bean : beans) {
+
+        }
     }
 
     public Set<Bean<?>> getBeans() {
@@ -50,16 +61,16 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
 
     @Override
     public <T> CreationalContext<T> createCreationalContext(
-            Contextual<T> paramContextual) {
-        // TODO Auto-generated method stub
-        return null;
+            Contextual<T> contextual) {
+        return new CreationalContextImpl<T>(contextual);
     }
 
     @Override
     public <T> InjectionTarget<T> createInjectionTarget(
-            AnnotatedType<T> paramAnnotatedType) {
-        // TODO Auto-generated method stub
+            AnnotatedType<T> annotatedType) {
+
         return null;
+        //return new InjectionTargetImpl<T>(annotatedType);
     }
 
     @Override
@@ -70,16 +81,29 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     }
 
     @Override
-    public Set<Bean<?>> getBeans(String paramString) {
-        // TODO Auto-generated method stub
-        return null;
+    public Set<Bean<?>> getBeans(String elName) {
+        Set<Bean<?>> subset = new HashSet<Bean<?>>();
+        for (Bean<?> bean : beans) {
+            // TODO EL-Resolution
+            if (bean.getName().equals(elName)) {
+                subset.add(bean);
+            }
+        }
+
+        return subset;
     }
 
     @Override
-    public Set<Bean<?>> getBeans(Type paramType,
-            Annotation... paramArrayOfAnnotation) {
-        // TODO Auto-generated method stub
-        return null;
+    public Set<Bean<?>> getBeans(Type type,
+            Annotation... qualifiers) {
+        Set<Bean<?>> subset = new HashSet<Bean<?>>();
+        for (Bean<?> bean : beans) {
+            if (bean.getTypes().contains(type) && bean.getQualifiers().containsAll(Arrays.asList(qualifiers))) {
+                subset.add(bean);
+            }
+        }
+
+        return subset;
     }
 
     @Override
