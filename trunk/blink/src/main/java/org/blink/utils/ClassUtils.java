@@ -222,6 +222,12 @@ public final class ClassUtils {
         return Modifier.isFinal(modifier);
     }
 
+    public static boolean isTransient(Integer modifier) {
+        Validate.notNull(modifier);
+
+        return Modifier.isTransient(modifier);
+    }
+
     /**
      * Check abstract modifier.
      *
