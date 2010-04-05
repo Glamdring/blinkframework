@@ -7,30 +7,19 @@ import java.util.Map;
 import javax.enterprise.context.spi.Contextual;
 import javax.enterprise.context.spi.CreationalContext;
 
-public class CreationalContextImpl<T> implements CreationalContext<T>,
-        Serializable {
+public class CreationalContextImpl<T> implements CreationalContext<T>, Serializable {
 
-    private static final long serialVersionUID = 7375854583908262422L;
-
-    // Only needed for creation, by the time it's serialized we don't need it
     private final transient Map<Contextual<?>, Object> incompleteInstances;
     private final transient Contextual<T> contextual;
 
-//    private final DependentInstancesStore dependentInstancesStore;
-//
-//    private final DependentInstancesStore parentDependentInstancesStore;
-
     public CreationalContextImpl(Contextual<T> contextual) {
-        this(contextual, new HashMap<Contextual<?>, Object>()); // new DependentInstancesStore()
+        this(contextual, new HashMap<Contextual<?>, Object>());
     }
 
     private CreationalContextImpl(Contextual<T> contextual,
-            Map<Contextual<?>, Object> incompleteInstances) { // DependentInstancesStore parentDependentInstancesStore
+            Map<Contextual<?>, Object> incompleteInstances) {
         this.incompleteInstances = incompleteInstances;
         this.contextual = contextual;
-
-//        this.dependentInstancesStore = new DependentInstancesStore();
-//        this.parentDependentInstancesStore = parentDependentInstancesStore;
     }
 
     public void push(T incompleteInstance) {
