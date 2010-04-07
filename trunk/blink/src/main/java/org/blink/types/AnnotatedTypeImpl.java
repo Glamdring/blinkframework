@@ -11,20 +11,28 @@ import javax.enterprise.inject.spi.AnnotatedConstructor;
 import javax.enterprise.inject.spi.AnnotatedField;
 import javax.enterprise.inject.spi.AnnotatedMethod;
 
+import com.google.common.collect.Sets;
+
 public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements
         BlinkAnnotatedType<T> {
 
     private final Class<T> clazz;
 
-    private Set<AnnotatedConstructor<T>> annotatedConstructors;
-    private Set<AnnotatedField<? super T>> annotatedFields;
-    private Set<AnnotatedMethod<? super T>> annotatedMethods;
+    private Set<AnnotatedConstructor<T>> annotatedConstructors = Sets.newHashSet();
+    private Set<AnnotatedField<? super T>> annotatedFields = Sets.newHashSet();
+    private Set<AnnotatedMethod<? super T>> annotatedMethods = Sets.newHashSet();
 
     private AnnotatedConstructor<T> noArgConstructor;
 
-    @SuppressWarnings("unchecked")
-    public AnnotatedTypeImpl(Class<T> clazz) {
+    public static <T> BlinkAnnotatedType<T> create(Class<T> clazz) {
+        return new AnnotatedTypeImpl<T>(clazz);
+    }
+
+    private AnnotatedTypeImpl(Class<T> clazz) {
         super(clazz);
+        if (clazz == null) {
+            throw new IllegalArgumentException("Passed Class must not be null");
+        }
         this.clazz = clazz;
 
         Constructor<T>[] constructors = (Constructor<T>[]) clazz
@@ -90,10 +98,11 @@ public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public BlinkAnnotatedType<T> getAnnotatedSuperclass() {
-        // TODO create anew, or get from somewhere?
-        return null;
+        // TODO load from a cache
+        return (BlinkAnnotatedType<T>) AnnotatedTypeImpl.create(clazz.getSuperclass());
     }
 
     @Override

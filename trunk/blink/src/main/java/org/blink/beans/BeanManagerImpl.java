@@ -25,36 +25,37 @@ import javax.enterprise.inject.spi.ObserverMethod;
 
 import org.blink.types.AnnotatedTypeImpl;
 
+import com.google.common.collect.Maps;
+
 public class BeanManagerImpl implements ConfigurableBeanManager {
 
     private static ConfigurableBeanManager instance;
 
     private Set<Bean<?>> beans;
+    private Map<Class<?>, AnnotatedType<?>> annotatedTypes = Maps.newHashMap();
 
-    private BeanManagerImpl(Set<Bean<?>> beans) {
+    private BeanManagerImpl() {
+
+    }
+
+    @Override
+    public void initialize(Set<Bean<?>> beans) {
         this.beans = beans;
 
         initializeAnnotatedTypes();
     }
 
-    public static synchronized void initialize(Set<Bean<?>> beans) {
-        if (instance != null) {
-            throw new IllegalStateException("BeanManager already initialized");
-        }
-        instance = new BeanManagerImpl(beans);
-    }
-
-    public static ConfigurableBeanManager getInstance() {
+    public static synchronized ConfigurableBeanManager getInstance() {
         if (instance == null) {
-            throw new IllegalStateException("Bean manager not initialized");
+            instance = new BeanManagerImpl();
         }
 
         return instance;
     }
 
     private void initializeAnnotatedTypes() {
-        for (Bean bean : beans) {
-
+        for (Bean<?> bean : beans) {
+            annotatedTypes.put(bean.getBeanClass(), AnnotatedTypeImpl.create(bean.getBeanClass()));
         }
     }
 
@@ -69,9 +70,13 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         contexts.put(context.getScope(), context);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public <T> AnnotatedType<T> createAnnotatedType(Class<T> paramClass) {
-        AnnotatedType<T> annotatedType = new AnnotatedTypeImpl<T>(paramClass);
+    public <T> AnnotatedType<T> createAnnotatedType(Class<T> clazz) {
+        AnnotatedType<T> annotatedType = (AnnotatedType<T>) annotatedTypes.get(clazz);
+        if (annotatedType == null) {
+            annotatedType = AnnotatedTypeImpl.create(clazz);
+        }
         return annotatedType;
     }
 
@@ -100,9 +105,12 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     @Override
     public Set<Bean<?>> getBeans(String elName) {
         Set<Bean<?>> subset = new HashSet<Bean<?>>();
+        if (elName == null) {
+            return subset;
+        }
         for (Bean<?> bean : beans) {
             // TODO EL-Resolution
-            if (bean.getName().equals(elName)) {
+            if (elName.equals(bean.getName())) {
                 subset.add(bean);
             }
         }

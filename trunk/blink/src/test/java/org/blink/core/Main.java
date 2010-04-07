@@ -7,5 +7,7 @@ public class Main {
     public static void main(String[] args) {
         BeanDeployer b = new BeanDeployer();
         b.deploy();
+
+        b.getBeanManager().getBeans("sampleBean");
     }
 }
