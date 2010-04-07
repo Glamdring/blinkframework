@@ -11,7 +11,8 @@ import javax.enterprise.inject.spi.AnnotatedConstructor;
 import javax.enterprise.inject.spi.AnnotatedField;
 import javax.enterprise.inject.spi.AnnotatedMethod;
 
-public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements BlinkAnnotatedType<T> {
+public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements
+        BlinkAnnotatedType<T> {
 
     private final Class<T> clazz;
 
@@ -19,14 +20,18 @@ public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements BlinkAnnotate
     private Set<AnnotatedField<? super T>> annotatedFields;
     private Set<AnnotatedMethod<? super T>> annotatedMethods;
 
+    private AnnotatedConstructor<T> noArgConstructor;
+
     @SuppressWarnings("unchecked")
     public AnnotatedTypeImpl(Class<T> clazz) {
         super(clazz);
         this.clazz = clazz;
 
-        Constructor<T>[] constructors = (Constructor<T>[]) clazz.getDeclaredConstructors();
+        Constructor<T>[] constructors = (Constructor<T>[]) clazz
+                .getDeclaredConstructors();
         for (Constructor<T> constructor : constructors) {
-            annotatedConstructors.add(new AnnotatedConstructorImpl<T>(this, constructor));
+            annotatedConstructors.add(new AnnotatedConstructorImpl<T>(this,
+                    constructor));
         }
 
         Field[] fields = clazz.getDeclaredFields();
@@ -40,6 +45,16 @@ public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements BlinkAnnotate
         }
 
         setAnnotations(clazz.getAnnotations());
+
+        initNoArgContructor();
+    }
+
+    private void initNoArgContructor() {
+        for (AnnotatedConstructor<T> constructor : getConstructors()) {
+            if (constructor.getParameters().size() == 0) {
+                noArgConstructor = constructor;
+            }
+        }
     }
 
     @Override
@@ -63,7 +78,8 @@ public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements BlinkAnnotate
     }
 
     @Override
-    public Set<AnnotatedMethod<? super T>> getDeclaredMethods(Class<? extends Annotation> annotation) {
+    public Set<AnnotatedMethod<? super T>> getDeclaredMethods(
+            Class<? extends Annotation> annotation) {
         Set<AnnotatedMethod<? super T>> result = new HashSet<AnnotatedMethod<? super T>>();
         for (AnnotatedMethod<? super T> m : annotatedMethods) {
             if (m.isAnnotationPresent(annotation)) {
@@ -76,7 +92,24 @@ public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements BlinkAnnotate
 
     @Override
     public BlinkAnnotatedType<T> getAnnotatedSuperclass() {
-        // TODO Auto-generated method stub
+        // TODO create anew, or get from somewhere?
         return null;
+    }
+
+    @Override
+    public Set<AnnotatedConstructor<T>> getDeclaredConstructors(
+            Class<? extends Annotation> annotation) {
+        Set<AnnotatedConstructor<T>> result = new HashSet<AnnotatedConstructor<T>>();
+        for (AnnotatedConstructor<T> m : annotatedConstructors) {
+            if (m.isAnnotationPresent(annotation)) {
+                result.add(m);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public AnnotatedConstructor<T> getNoArgsAnnotatedConstructor() {
+        return noArgConstructor;
     }
 }

@@ -18,7 +18,11 @@ public class InjectionPointImpl<T> implements InjectionPoint {
     private AnnotatedMember<? super T> member;
     private Bean<?> bean;
 
-    public InjectionPointImpl(AnnotatedMember<? super T> member, Bean<?> bean) {
+    public static <T> InjectionPointImpl<T> create(AnnotatedMember<? super T> member, Bean<?> bean) {
+        return new InjectionPointImpl<T>(member, bean);
+    }
+
+    private InjectionPointImpl(AnnotatedMember<? super T> member, Bean<?> bean) {
         this.member = member;
         this.bean = bean;
     }

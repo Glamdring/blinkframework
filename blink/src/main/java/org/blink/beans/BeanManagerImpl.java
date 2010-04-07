@@ -85,7 +85,9 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     public <T> InjectionTarget<T> createInjectionTarget(
             AnnotatedType<T> annotatedType) {
 
-        return new InjectionTargetImpl<T>(annotatedType, this);
+        //TODO ?? create another constructor of injection target?
+        //return new InjectionTargetImpl<T>(annotatedType);
+        return null;
     }
 
     @Override

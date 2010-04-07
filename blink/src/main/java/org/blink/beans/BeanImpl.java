@@ -2,7 +2,6 @@ package org.blink.beans;
 
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,21 +17,23 @@ import javax.enterprise.inject.Alternative;
 import javax.enterprise.inject.spi.AnnotatedConstructor;
 import javax.enterprise.inject.spi.AnnotatedField;
 import javax.enterprise.inject.spi.AnnotatedMethod;
-import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.InjectionPoint;
+import javax.enterprise.inject.spi.InjectionTarget;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.blink.exceptions.DefinitionException;
 import org.blink.types.AnnotatedTypeImpl;
+import org.blink.types.BlinkAnnotatedType;
 import org.blink.types.injectionpoints.InjectionPointImpl;
 
-public class BeanImpl<T> implements Bean<T> {
+public class BeanImpl<T> implements BlinkBean<T> {
 
-    private static final Logger logger = Logger.getLogger(BeanImpl.class.getName());
+    private static final Logger logger = Logger.getLogger(BeanImpl.class
+            .getName());
 
-    public static final Set<Class<? extends Annotation>> SCOPES =
-        new HashSet<Class<? extends Annotation>>();
+    public static final Set<Class<? extends Annotation>> SCOPES = new HashSet<Class<? extends Annotation>>();
 
     private static final Class<? extends Annotation> DEFAULT_SCOPE = ApplicationScoped.class;
     static {
@@ -49,20 +50,18 @@ public class BeanImpl<T> implements Bean<T> {
     private boolean alternative;
     private Class<? extends Annotation> scope;
     private boolean nullable;
-    private AnnotatedType<T> annotatedType;
+    private BlinkAnnotatedType<T> annotatedType;
     private String name;
+
+    private InjectionTarget<T> injectionTarget;
 
     public BeanImpl(Class<T> clazz) {
         beanClass = clazz;
-        annotatedType = new AnnotatedTypeImpl<T>(beanClass);
-        initName();
-        initInjectionPoints();
-        initAlternative();
     }
 
     private void initAlternative() {
         alternative = beanClass.isAnnotationPresent(Alternative.class);
-        //TODO xml alternatives
+        // TODO xml alternatives
     }
 
     private void initName() {
@@ -77,14 +76,15 @@ public class BeanImpl<T> implements Bean<T> {
 
     private void initInjectionPoints() {
         Set<InjectionPoint> injectionPoints = new HashSet<InjectionPoint>();
-        for (AnnotatedConstructor<T> constructor : annotatedType.getConstructors()) {
-            injectionPoints.add(new InjectionPointImpl<T>(constructor, this));
+        for (AnnotatedConstructor<T> constructor : annotatedType
+                .getConstructors()) {
+            injectionPoints.add(InjectionPointImpl.create(constructor, this));
         }
-        for (AnnotatedField<? super T> field: annotatedType.getFields()) {
-            injectionPoints.add(new InjectionPointImpl<T>(field, this));
+        for (AnnotatedField<? super T> field : annotatedType.getFields()) {
+            injectionPoints.add(InjectionPointImpl.create(field, this));
         }
-        for (AnnotatedMethod<? super T> method: annotatedType.getMethods()) {
-            injectionPoints.add(new InjectionPointImpl<T>(method, this));
+        for (AnnotatedMethod<? super T> method : annotatedType.getMethods()) {
+            injectionPoints.add(InjectionPointImpl.create(method, this));
         }
     }
 
@@ -140,33 +140,73 @@ public class BeanImpl<T> implements Bean<T> {
         return !beanClass.isPrimitive();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public T create(CreationalContext<T> paramCreationalContext) {
-        try {
-            Constructor[] constructors = beanClass.getDeclaredConstructors();
-            Constructor annotatedConstructor = null;
-            for (Constructor constructor : constructors) {
-                if (constructor.getAnnotation(Inject.class) != null) {
-                    annotatedConstructor = constructor;
-                    break;
-                }
-            }
+    public T create(CreationalContext<T> creationalContext) {
+        T instance = getInjectionTarget().produce(creationalContext);
+        getInjectionTarget().inject(instance, creationalContext);
+        getInjectionTarget().postConstruct(instance);
+        return instance;
+    }
 
-            if (annotatedConstructor != null) {
-                return null; //TODO
-            } else {
-                return beanClass.newInstance();
-            }
+    @Override
+    public void destroy(T instance, CreationalContext<T> creationalContext) {
+        try {
+            getInjectionTarget().preDestroy(instance);
+            getInjectionTarget().dispose(instance);
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Error creating bean", ex);
-            return null;
+            logger.log(Level.WARNING, "Exception in destryoing instance of "
+                    + getName(), ex);
         }
     }
 
     @Override
-    public void destroy(T paramT, CreationalContext<T> paramCreationalContext) {
-        // TODO Auto-generated method stub
+    public InjectionTarget<T> getInjectionTarget() {
+        return injectionTarget;
+    }
 
+    @Override
+    public void setInjectionTarget(InjectionTarget<T> injectionTarget) {
+        this.injectionTarget = injectionTarget;
+    }
+
+    @Override
+    public BlinkAnnotatedType<T> getAnnotatedType() {
+        return annotatedType;
+    }
+
+    @Override
+    public void initialize() {
+        annotatedType = new AnnotatedTypeImpl<T>(beanClass);
+        initName();
+        initInjectionPoints();
+        initAlternative();
+        setInjectionTarget(new InjectionTargetImpl<T>(this));
+    }
+
+    public InjectionPoint getBeanConstructorInjectionPoint() {
+
+        InjectionPoint constructorInjectionPoint = null;
+        Set<AnnotatedConstructor<T>> initializerAnnotatedConstructors = annotatedType
+                .getDeclaredConstructors(Inject.class);
+        if (initializerAnnotatedConstructors.size() > 1) {
+            if (initializerAnnotatedConstructors.size() > 1) {
+                throw new DefinitionException(
+                        "Multiple injectable constructors define",
+                        annotatedType);
+            }
+        } else if (initializerAnnotatedConstructors.size() == 1) {
+            constructorInjectionPoint = InjectionPointImpl.create(
+                    initializerAnnotatedConstructors.iterator().next(), this);
+        } else if (annotatedType.getNoArgsAnnotatedConstructor() != null) {
+            constructorInjectionPoint = InjectionPointImpl.create(annotatedType
+                    .getNoArgsAnnotatedConstructor(), this);
+        }
+
+        if (constructorInjectionPoint == null) {
+            throw new DefinitionException("No suitable constructor",
+                    annotatedType);
+        }
+
+        return constructorInjectionPoint;
     }
 }
