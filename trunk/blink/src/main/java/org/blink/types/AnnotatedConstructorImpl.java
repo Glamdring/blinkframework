@@ -8,10 +8,11 @@ import javax.enterprise.inject.spi.AnnotatedType;
 public class AnnotatedConstructorImpl<T> extends AnnotatedCallableImpl<T> implements AnnotatedConstructor<T> {
 
     public AnnotatedConstructorImpl(AnnotatedType<T> declaringType,
-            Constructor javaMember) {
+            Constructor<T> javaMember) {
         super(declaringType, javaMember, javaMember.getDeclaringClass());
 
         setAnnotatedParameters(javaMember.getGenericParameterTypes(), javaMember.getParameterAnnotations());
+        setAnnotations(javaMember.getAnnotations());
 
     }
 

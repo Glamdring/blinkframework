@@ -9,6 +9,7 @@ public class AnnotatedFieldImpl<T> extends AnnotatedMemberImpl<T> implements Ann
 
     public AnnotatedFieldImpl(AnnotatedType<T> declaringType, Field javaMember) {
         super(declaringType, javaMember, javaMember.getDeclaringClass());
+        setAnnotations(javaMember.getAnnotations());
     }
 
     @Override

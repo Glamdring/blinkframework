@@ -15,12 +15,14 @@ import org.blink.beans.BeanImpl;
 import org.blink.beans.BeanManagerImpl;
 import org.blink.beans.BeanScanner;
 import org.blink.beans.ClasspathBeanScanner;
+import org.blink.beans.ConfigurableBeanManager;
+import org.blink.contexts.ApplicationContextImpl;
 import org.blink.exceptions.ContextInitializationException;
 
 public class BeanDeployer {
 
     private BeanScanner beanScanner;
-    private BeanManager beanManager;
+    private ConfigurableBeanManager beanManager;
 
     private boolean initialized;
 
@@ -60,6 +62,7 @@ public class BeanDeployer {
             // Discover classpath classes
             deployFromClassPath();
 
+            addContexts();
             // Check Specialization
 
             // Validate injection Points
@@ -67,6 +70,11 @@ public class BeanDeployer {
             initialized = true;
         }
 
+    }
+
+    private void addContexts() {
+        beanManager.addContext(new ApplicationContextImpl());
+        // TODO more contexts
     }
 
     /**
