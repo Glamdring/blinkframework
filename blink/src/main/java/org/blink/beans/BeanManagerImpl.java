@@ -16,7 +16,6 @@ import javax.enterprise.context.spi.Contextual;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Decorator;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
@@ -28,7 +27,7 @@ import org.blink.types.AnnotatedTypeImpl;
 
 public class BeanManagerImpl implements ConfigurableBeanManager {
 
-    private static BeanManager instance;
+    private static ConfigurableBeanManager instance;
 
     private Set<Bean<?>> beans;
 
@@ -45,7 +44,7 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         instance = new BeanManagerImpl(beans);
     }
 
-    public static BeanManager getInstance() {
+    public static ConfigurableBeanManager getInstance() {
         if (instance == null) {
             throw new IllegalStateException("Bean manager not initialized");
         }
@@ -86,8 +85,7 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     public <T> InjectionTarget<T> createInjectionTarget(
             AnnotatedType<T> annotatedType) {
 
-        return null;
-        //return new InjectionTargetImpl<T>(annotatedType);
+        return new InjectionTargetImpl<T>(annotatedType, this);
     }
 
     @Override

@@ -11,6 +11,7 @@ public class AnnotatedMethodImpl<T> extends AnnotatedCallableImpl<T> implements 
 
     public AnnotatedMethodImpl(AnnotatedType<T> declaringType, Method javaMemeber) {
         super(declaringType, javaMemeber, javaMemeber.getDeclaringClass());
+        setAnnotations(javaMemeber.getAnnotations());
     }
 
     @Override

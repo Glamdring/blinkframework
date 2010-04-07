@@ -17,7 +17,6 @@ public class AnnotatedCallableImpl<T> extends AnnotatedMemberImpl<T> implements 
     public AnnotatedCallableImpl(AnnotatedType<T> declaringType,
             Member javaMemeber, Type baseType) {
         super(declaringType, javaMemeber, baseType);
-
     }
 
     protected void setAnnotatedParameters(Type[] genericParameterTypes,
