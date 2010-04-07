@@ -14,6 +14,7 @@ import javax.enterprise.inject.spi.InjectionPoint;
 import org.blink.beans.BeanImpl;
 import org.blink.beans.BeanManagerImpl;
 import org.blink.beans.BeanScanner;
+import org.blink.beans.BlinkBean;
 import org.blink.beans.ClasspathBeanScanner;
 import org.blink.beans.ConfigurableBeanManager;
 import org.blink.contexts.ApplicationContextImpl;
@@ -34,12 +35,13 @@ public class BeanDeployer {
 
             Set<Bean<?>> beans = new HashSet<Bean<?>>(classes.size());
 
+            beanManager = BeanManagerImpl.getInstance();
             for (Class<?> clazz : classes) {
-                Bean<?> bean = new BeanImpl(clazz);
+                BlinkBean<?> bean = new BeanImpl(clazz);
+                bean.initialize();
                 beans.add(bean);
             }
-            BeanManagerImpl.initialize(beans);
-            beanManager = BeanManagerImpl.getInstance();
+            beanManager.initialize(beans);
 
             return beanManager;
 
@@ -143,5 +145,9 @@ public class BeanDeployer {
                 }
             }
         }
+    }
+
+    public BeanManager getBeanManager() {
+        return beanManager;
     }
 }

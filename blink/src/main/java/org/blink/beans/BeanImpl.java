@@ -17,7 +17,6 @@ import javax.enterprise.inject.Alternative;
 import javax.enterprise.inject.spi.AnnotatedConstructor;
 import javax.enterprise.inject.spi.AnnotatedField;
 import javax.enterprise.inject.spi.AnnotatedMethod;
-import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.inject.Inject;
@@ -42,6 +41,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
         SCOPES.add(RequestScoped.class);
         SCOPES.add(ConversationScoped.class);
     }
+
     private Class<T> beanClass;
     private Set<Annotation> qualifiers;
     private Set<Class<? extends Annotation>> stereotypes;
@@ -176,7 +176,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
     @Override
     public void initialize() {
-        annotatedType = new AnnotatedTypeImpl<T>(beanClass);
+        annotatedType = AnnotatedTypeImpl.create(beanClass);
         initName();
         initInjectionPoints();
         initAlternative();
