@@ -9,8 +9,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.AnnotatedMethod;
-import javax.enterprise.inject.spi.AnnotatedType;
-import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 
@@ -21,14 +19,14 @@ import org.blink.types.BlinkAnnotatedType;
 public class InjectionTargetImpl<T> implements InjectionTarget<T> {
 
     private BlinkAnnotatedType<T> type;
-    private BeanManager beanManager;
+    private BlinkBean<T> bean;
 
     private List<AnnotatedMethod<? super T>> postConstructMethods;
     private List<AnnotatedMethod<? super T>> preDestroyMethods;
 
-    public InjectionTargetImpl(AnnotatedType<T> type, BeanManager beanManager) {
-        this.type = (BlinkAnnotatedType<T>) type;
-        this.beanManager = beanManager;
+    public InjectionTargetImpl(BlinkBean<T> bean) {
+        this.bean = bean;
+        this.type = bean.getAnnotatedType();
         postConstructMethods = getMethods(PostConstruct.class);
         preDestroyMethods = getMethods(PreDestroy.class);
     }
@@ -54,6 +52,8 @@ public class InjectionTargetImpl<T> implements InjectionTarget<T> {
 
     @Override
     public void inject(T instance, CreationalContext<T> ctx) {
+
+        //TODO
         // InjectionTargetBean<T> bean = getBean(InjectionTargetBean.class);
 
         // bean.injectResources(instance, ctx);
@@ -91,14 +91,14 @@ public class InjectionTargetImpl<T> implements InjectionTarget<T> {
 
     @Override
     public Set<InjectionPoint> getInjectionPoints() {
-        // TODO Auto-generated method stub
-        return null;
+        return bean.getInjectionPoints();
     }
 
     @Override
     public T produce(CreationalContext<T> creationalContext) {
-        // TODO Auto-generated method stub
+        InjectionPoint constructorInjectionPoint = bean.getBeanConstructorInjectionPoint();
+        // TODO XXX gather required parameters and produce
+
         return null;
     }
-
 }
