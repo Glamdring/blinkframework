@@ -2,6 +2,7 @@ package org.blink.types.injectionpoints;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.AnnotatedConstructor;
@@ -36,7 +37,8 @@ public class ConstructorInjectionPoint<T> extends InjectionPointImpl<T> {
        List<BlinkInjectionPoint<T>> result = new ArrayList<BlinkInjectionPoint<T>>(params.size());
 
        for (AnnotatedParameter<T> param : params) {
-           result.add(InjectionPointImpl.create(param, getBean()));
+           Set<Bean<?>> beans = getBlinkBean().getBeanManager().getBeans(param.getBaseType());
+           result.add(InjectionPointImpl.create(param, beans.iterator().next()));
        }
 
        return result;

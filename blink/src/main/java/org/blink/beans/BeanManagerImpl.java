@@ -154,9 +154,8 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
 
     @Override
     public Object getInjectableReference(InjectionPoint injectionPoint,
-            CreationalContext<?> paramCreationalContext) {
-        // TODO Auto-generated method stub
-        return null;
+            CreationalContext<?> creationalContext) {
+        return getReference(injectionPoint.getBean(), injectionPoint.getType(), creationalContext);
     }
 
     @Override
@@ -172,11 +171,11 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Object getReference(Bean<?> paramBean, Type paramType,
-            CreationalContext<?> paramCreationalContext) {
-        // TODO Auto-generated method stub
-        return null;
+    public Object getReference(Bean<?> bean, Type type,
+            CreationalContext<?> creationalContext) {
+        return getContext(bean.getScope()).get((Contextual) bean, creationalContext);
     }
 
     @Override

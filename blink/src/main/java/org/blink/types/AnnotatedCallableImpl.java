@@ -19,13 +19,13 @@ public class AnnotatedCallableImpl<T> extends AnnotatedMemberImpl<T> implements 
         super(declaringType, javaMemeber, baseType);
     }
 
-    protected void setAnnotatedParameters(Type[] genericParameterTypes,
+    protected void setAnnotatedParameters(Type[] parameterTypes,
             Annotation[][] parameterAnnotations) {
         int i = 0;
 
-        for (Type genericParameter : genericParameterTypes) {
+        for (Type arameterType : parameterTypes) {
             AnnotatedParameterImpl<T> parameterImpl = new AnnotatedParameterImpl<T>(
-                    this, i, genericParameter);
+                    this, i, arameterType);
             parameterImpl.setAnnotations(parameterAnnotations[i]);
 
             addAnnotatedParameter(parameterImpl);
