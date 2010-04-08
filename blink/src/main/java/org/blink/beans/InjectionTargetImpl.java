@@ -8,7 +8,6 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.CreationException;
 import javax.enterprise.inject.spi.AnnotatedMethod;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
@@ -56,9 +55,14 @@ public class InjectionTargetImpl<T> implements InjectionTarget<T> {
     @Override
     public void inject(T instance, CreationalContext<T> ctx) {
 
-        injectFieldsAndInitializers(instance, ctx, bean.getBeanManager(), bean
-                .getFieldInjectionPoints(), bean.getInitializerMethodInjectionPoints());
-        // TODO
+        injectFieldsAndInitializers(
+                instance,
+                ctx,
+                bean.getBeanManager(),
+                bean.getFieldInjectionPoints(),
+                bean.getInitializerMethodInjectionPoints());
+
+
         // InjectionTargetBean<T> bean = getBean(InjectionTargetBean.class);
 
         // bean.injectResources(instance, ctx);
@@ -112,34 +116,16 @@ public class InjectionTargetImpl<T> implements InjectionTarget<T> {
     }
 
     protected void injectFieldsAndInitializers(T instance, CreationalContext<T> ctx,
-            BeanManagerImpl beanManager,
-            List<? extends Iterable<? extends BlinkInjectionPoint<?>>> injectableFields,
-            List<? extends Iterable<? extends BlinkInjectionPoint<?>>> initializerMethods) {
+            ConfigurableBeanManager beanManager,
+            Set<BlinkInjectionPoint<T>> injectableFields,
+            Set<BlinkInjectionPoint<T>> initializerMethods) {
 
-        for (int i = 0; i < injectableFields.size(); i++) {
-            injectBoundFields(instance, ctx, beanManager, injectableFields.get(i));
+        for (BlinkInjectionPoint<T> injectableField : injectableFields) {
+            injectableField.inject(instance, beanManager, ctx);
         }
 
-        for (int i = 0; i < initializerMethods.size(); i++) {
-            callInitializers(instance, ctx, beanManager, initializerMethods.get(i));
-        }
-    }
-
-    protected void injectBoundFields(T instance, CreationalContext<T> creationalContext,
-            ConfigurableBeanManager manager,
-            Iterable<? extends BlinkInjectionPoint<?>> injectableFields) {
-
-        for (BlinkInjectionPoint<?> injectableField : injectableFields) {
-            injectableField.inject(instance, manager, creationalContext);
-        }
-    }
-
-    public static <T> void callInitializers(T instance,
-            CreationalContext<T> creationalContext, ConfigurableBeanManager manager,
-            Iterable<? extends BlinkInjectionPoint<?>> initializerMethods) {
-        for (BlinkInjectionPoint<?> initializer : initializerMethods) {
-            initializer.invoke(instance, manager, creationalContext,
-                    CreationException.class);
+        for (BlinkInjectionPoint<T> initializer: initializerMethods) {
+            initializer.invoke(instance, beanManager, ctx);
         }
     }
 }

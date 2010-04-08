@@ -9,4 +9,6 @@ public interface BlinkInjectionPoint<T> extends InjectionPoint {
 
     void inject(T instance, ConfigurableBeanManager manager, CreationalContext<T> creationContext);
 
+    void invoke(T instance, ConfigurableBeanManager manager, CreationalContext<T> creationContext);
+
 }

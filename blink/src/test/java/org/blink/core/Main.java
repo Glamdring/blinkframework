@@ -16,5 +16,6 @@ public class Main {
         SampleBean sb = (SampleBean) bean.create(new CreationalContextImpl<SampleBean>(bean));
 
         System.out.println(sb.getBeanToInject());
+        System.out.println(sb.getField());
     }
 }
