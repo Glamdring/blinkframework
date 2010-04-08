@@ -153,7 +153,7 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     }
 
     @Override
-    public Object getInjectableReference(InjectionPoint paramInjectionPoint,
+    public Object getInjectableReference(InjectionPoint injectionPoint,
             CreationalContext<?> paramCreationalContext) {
         // TODO Auto-generated method stub
         return null;

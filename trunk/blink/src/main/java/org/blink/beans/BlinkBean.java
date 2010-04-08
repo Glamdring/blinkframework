@@ -1,10 +1,10 @@
 package org.blink.beans;
 
 import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 
 import org.blink.types.BlinkAnnotatedType;
+import org.blink.types.injectionpoints.ConstructorInjectionPoint;
 
 public interface BlinkBean<T> extends Bean<T> {
 
@@ -16,5 +16,7 @@ public interface BlinkBean<T> extends Bean<T> {
 
     BlinkAnnotatedType<T> getAnnotatedType();
 
-    InjectionPoint getBeanConstructorInjectionPoint();
+    ConstructorInjectionPoint<T> getBeanConstructorInjectionPoint();
+
+    ConfigurableBeanManager getBeanManager();
 }
