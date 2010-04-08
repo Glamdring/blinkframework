@@ -1,27 +1,21 @@
 package org.blink.types;
 
 import java.lang.reflect.Method;
-import java.util.List;
 
 import javax.enterprise.inject.spi.AnnotatedMethod;
-import javax.enterprise.inject.spi.AnnotatedParameter;
 import javax.enterprise.inject.spi.AnnotatedType;
 
 public class AnnotatedMethodImpl<T> extends AnnotatedCallableImpl<T> implements AnnotatedMethod<T> {
 
-    public AnnotatedMethodImpl(AnnotatedType<T> declaringType, Method javaMemeber) {
-        super(declaringType, javaMemeber, javaMemeber.getDeclaringClass());
-        setAnnotations(javaMemeber.getAnnotations());
+    public AnnotatedMethodImpl(AnnotatedType<T> declaringType, Method javaMember) {
+        super(declaringType, javaMember, javaMember.getDeclaringClass());
+
+        setAnnotatedParameters(javaMember.getGenericParameterTypes(), javaMember.getParameterAnnotations());
+        setAnnotations(javaMember.getAnnotations());
     }
 
     @Override
     public Method getJavaMember() {
         return (Method) super.getJavaMember();
-    }
-
-    @Override
-    public List<AnnotatedParameter<T>> getParameters() {
-        // TODO Auto-generated method stub
-        return null;
     }
 }

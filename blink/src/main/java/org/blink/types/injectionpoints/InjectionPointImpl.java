@@ -3,7 +3,9 @@ package org.blink.types.injectionpoints;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -11,6 +13,7 @@ import java.util.Set;
 import javax.decorator.Delegate;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Annotated;
+import javax.enterprise.inject.spi.AnnotatedCallable;
 import javax.enterprise.inject.spi.AnnotatedMember;
 import javax.enterprise.inject.spi.AnnotatedParameter;
 import javax.enterprise.inject.spi.Bean;
@@ -116,6 +119,19 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
+    protected List<BlinkInjectionPoint<T>> getParameterInjectionPoints()
+    {
+       final List<AnnotatedParameter<T>> params = ((AnnotatedCallable<T>) getAnnotated()).getParameters();
+       List<BlinkInjectionPoint<T>> result = new ArrayList<BlinkInjectionPoint<T>>(params.size());
+
+       for (AnnotatedParameter<T> param : params) {
+           Set<Bean<?>> beans = getBlinkBean().getBeanManager().getBeans(param.getBaseType());
+           result.add(InjectionPointImpl.create(param, beans.iterator().next()));
+       }
+
+       return result;
+    }
     @Override
     public String toString() {
         return "Name: " + getBean().getName() + "; " +
@@ -140,7 +156,13 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
     @Override
     public void invoke(T instance, ConfigurableBeanManager manager,
             CreationalContext<T> creationContext) {
-        // TODO Auto-generated method stub
 
+        Method method = (Method) getMember();
+        method.setAccessible(true);
+        try {
+            method.invoke(instance, getParameterValues(getParameterInjectionPoints(), null, null, getBlinkBean().getBeanManager(), creationContext));
+        } catch (Exception ex) {
+            throw new BlinkException(ex);
+        }
     }
 }
