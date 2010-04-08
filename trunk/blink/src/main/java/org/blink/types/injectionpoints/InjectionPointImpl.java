@@ -17,10 +17,12 @@ import javax.enterprise.inject.spi.AnnotatedCallable;
 import javax.enterprise.inject.spi.AnnotatedMember;
 import javax.enterprise.inject.spi.AnnotatedParameter;
 import javax.enterprise.inject.spi.Bean;
+import javax.inject.Qualifier;
 
 import org.blink.beans.BlinkBean;
 import org.blink.beans.ConfigurableBeanManager;
 import org.blink.exceptions.BlinkException;
+import org.blink.types.AnnotatedImpl;
 import org.blink.utils.ClassUtils;
 
 public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
@@ -65,7 +67,8 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
 
     @Override
     public Set<Annotation> getQualifiers() {
-        return annotated.getAnnotations();
+        return AnnotatedImpl.getMetaAnnotations(annotated.getAnnotations(),
+                Qualifier.class);
     }
 
     @Override
@@ -93,9 +96,11 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
      *            The Bean manager
      * @return The object array of looked up values
      */
-    protected Object[] getParameterValues(List<BlinkInjectionPoint<T>> parameters,
-            Object specialVal, Class<? extends Annotation> specialParam,
-            ConfigurableBeanManager manager, CreationalContext<?> creationalContext) {
+    protected Object[] getParameterValues(
+            List<BlinkInjectionPoint<T>> parameters, Object specialVal,
+            Class<? extends Annotation> specialParam,
+            ConfigurableBeanManager manager,
+            CreationalContext<?> creationalContext) {
 
         Object[] parameterValues = new Object[parameters.size()];
         Iterator<BlinkInjectionPoint<T>> iterator = parameters.iterator();
@@ -105,7 +110,8 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
                     && param.getAnnotated().isAnnotationPresent(specialParam)) {
                 parameterValues[i] = specialVal;
             } else {
-                parameterValues[i] = manager.getInjectableReference(param, creationalContext);
+                parameterValues[i] = manager.getInjectableReference(param,
+                        creationalContext);
             }
         }
         return parameterValues;
@@ -120,33 +126,41 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
     }
 
     @SuppressWarnings("unchecked")
-    protected List<BlinkInjectionPoint<T>> getParameterInjectionPoints()
-    {
-       final List<AnnotatedParameter<T>> params = ((AnnotatedCallable<T>) getAnnotated()).getParameters();
-       List<BlinkInjectionPoint<T>> result = new ArrayList<BlinkInjectionPoint<T>>(params.size());
+    protected List<BlinkInjectionPoint<T>> getParameterInjectionPoints() {
+        final List<AnnotatedParameter<T>> params = ((AnnotatedCallable<T>) getAnnotated())
+                .getParameters();
+        List<BlinkInjectionPoint<T>> result = new ArrayList<BlinkInjectionPoint<T>>(
+                params.size());
 
-       for (AnnotatedParameter<T> param : params) {
+        for (AnnotatedParameter<T> param : params) {
+            Set<Annotation> qualifiers = AnnotatedImpl.getMetaAnnotations(param
+                    .getAnnotations(), Qualifier.class);
+
             Set<Bean<?>> beans = getBlinkBean().getBeanManager().getBeans(
                     param.getBaseType(),
-                    param.getAnnotations().toArray(
-                            new Annotation[param.getAnnotations().size()]));
-           result.add(InjectionPointImpl.create(param, beans.iterator().next()));
-       }
+                    qualifiers.toArray(new Annotation[qualifiers.size()]));
+            result.add(InjectionPointImpl
+                    .create(param, beans.iterator().next()));
+        }
 
-       return result;
+        return result;
     }
+
     @Override
     public String toString() {
-        return "Name: " + getBean().getName() + "; " +
-            "Type: " + getType() + "; ";
+        return "Name: " + getBean().getName() + "; " + "Type: " + getType()
+                + "; ";
     }
 
     @Override
     public void inject(T instance, ConfigurableBeanManager manager,
             CreationalContext<T> creationContext) {
 
-        Set<Bean<?>> beans = manager.getBeans(getType());
-        Object objectToInject = manager.getReference(beans.iterator().next(), getType(), creationContext);
+        Set<Annotation> qualifiers = getQualifiers();
+        Set<Bean<?>> beans = manager.getBeans(getType(), qualifiers
+                .toArray(new Annotation[qualifiers.size()]));
+        Object objectToInject = manager.getReference(beans.iterator().next(),
+                getType(), creationContext);
         Field field = (Field) getMember();
         field.setAccessible(true);
         try {
@@ -163,7 +177,9 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
         Method method = (Method) getMember();
         method.setAccessible(true);
         try {
-            method.invoke(instance, getParameterValues(getParameterInjectionPoints(), null, null, getBlinkBean().getBeanManager(), creationContext));
+            method.invoke(instance, getParameterValues(
+                    getParameterInjectionPoints(), null, null, getBlinkBean()
+                            .getBeanManager(), creationContext));
         } catch (Exception ex) {
             throw new BlinkException(ex);
         }
