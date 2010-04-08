@@ -6,6 +6,9 @@ import javax.inject.Named;
 @Named
 public class SampleBean {
 
+    @Inject
+    private BeanToInject field;
+
     private BeanToInject beanToInject;
 
     @Inject
@@ -19,5 +22,13 @@ public class SampleBean {
 
     public void setBeanToInject(BeanToInject beanToInject) {
         this.beanToInject = beanToInject;
+    }
+
+    public BeanToInject getField() {
+        return field;
+    }
+
+    public void setField(BeanToInject field) {
+        this.field = field;
     }
 }

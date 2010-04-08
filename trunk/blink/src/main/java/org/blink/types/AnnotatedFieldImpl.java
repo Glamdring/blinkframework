@@ -8,7 +8,7 @@ import javax.enterprise.inject.spi.AnnotatedType;
 public class AnnotatedFieldImpl<T> extends AnnotatedMemberImpl<T> implements AnnotatedField<T> {
 
     public AnnotatedFieldImpl(AnnotatedType<T> declaringType, Field javaMember) {
-        super(declaringType, javaMember, javaMember.getDeclaringClass());
+        super(declaringType, javaMember, javaMember.getType());
         setAnnotations(javaMember.getAnnotations());
     }
 

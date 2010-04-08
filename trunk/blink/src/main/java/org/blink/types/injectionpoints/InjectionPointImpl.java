@@ -1,6 +1,7 @@
 package org.blink.types.injectionpoints;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Type;
 import java.util.Iterator;
@@ -16,6 +17,7 @@ import javax.enterprise.inject.spi.Bean;
 
 import org.blink.beans.BlinkBean;
 import org.blink.beans.ConfigurableBeanManager;
+import org.blink.exceptions.BlinkException;
 import org.blink.utils.ClassUtils;
 
 public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
@@ -96,8 +98,6 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
         Iterator<BlinkInjectionPoint<T>> iterator = parameters.iterator();
         for (int i = 0; i < parameterValues.length; i++) {
             BlinkInjectionPoint<T> param = iterator.next();
-            System.out.println(toString());
-            System.out.println(param.toString());
             if (specialParam != null
                     && param.getAnnotated().isAnnotationPresent(specialParam)) {
                 parameterValues[i] = specialVal;
@@ -126,6 +126,21 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
     public void inject(T instance, ConfigurableBeanManager manager,
             CreationalContext<T> creationContext) {
 
-        //TODO XXX inject
+        Set<Bean<?>> beans = manager.getBeans(getType());
+        Object objectToInject = manager.getReference(beans.iterator().next(), getType(), creationContext);
+        Field field = (Field) getMember();
+        field.setAccessible(true);
+        try {
+            field.set(instance, objectToInject);
+        } catch (Exception ex) {
+            throw new BlinkException(ex);
+        }
+    }
+
+    @Override
+    public void invoke(T instance, ConfigurableBeanManager manager,
+            CreationalContext<T> creationContext) {
+        // TODO Auto-generated method stub
+
     }
 }

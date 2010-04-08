@@ -51,17 +51,16 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
     private Class<T> beanClass;
     private Set<Annotation> qualifiers = Sets.newHashSet();
-    private Set<Class<? extends Annotation>> stereotypes;
+    private Set<Class<? extends Annotation>> stereotypes = Sets.newHashSet();
     private Set<Type> types;
     private boolean alternative;
     private Class<? extends Annotation> scope;
-    private boolean nullable;
     private BlinkAnnotatedType<T> annotatedType;
     private String name;
 
-    private Set<BlinkInjectionPoint<T>> injectionPoints;
-    private Set<BlinkInjectionPoint<T>> fieldInjectionPoints;
-    private Set<BlinkInjectionPoint<T>> initializerMethodInjectionPoints;
+    private Set<BlinkInjectionPoint<T>> injectionPoints = Sets.newHashSet();
+    private Set<BlinkInjectionPoint<T>> fieldInjectionPoints = Sets.newHashSet();
+    private Set<BlinkInjectionPoint<T>> initializerMethodInjectionPoints = Sets.newHashSet();
 
 
     private InjectionTarget<T> injectionTarget;
@@ -78,6 +77,17 @@ public class BeanImpl<T> implements BlinkBean<T> {
         // TODO xml alternatives
     }
 
+    private void initScope() {
+        for (Class<? extends Annotation> scope : SCOPES) {
+            if (annotatedType.isAnnotationPresent(scope)) {
+                this.scope = scope;
+                return;
+            }
+        }
+
+        scope = DEFAULT_SCOPE;
+    }
+
     private void initTypes() {
         if (getAnnotatedType().isAnnotationPresent(Typed.class)) {
             this.types = getTypedTypes(ReflectionUtils.buildTypeMap(getAnnotatedType()
@@ -91,15 +101,14 @@ public class BeanImpl<T> implements BlinkBean<T> {
         }
     }
 
-    private Set<Type> getTypedTypes(Map<Class<?>, Type> typeClosure, Class<?> rawType,
+    private Set<Type> getTypedTypes(Map<Class<?>, Type> typeClosure, @SuppressWarnings("unused") Class<?> rawType,
             Typed typed) {
         Set<Type> types = new HashSet<Type>();
         for (Class<?> specifiedClass : typed.value()) {
             if (!typeClosure.containsKey(specifiedClass)) {
                 throw new DefinitionException("Typed class not in hierarchy", null);
-            } else {
-                types.add(typeClosure.get(specifiedClass));
             }
+            types.add(typeClosure.get(specifiedClass));
         }
         types.add(Object.class);
         return types;
@@ -115,18 +124,32 @@ public class BeanImpl<T> implements BlinkBean<T> {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void initInjectionPoints() {
-        Set<InjectionPoint> injectionPoints = new HashSet<InjectionPoint>();
         for (AnnotatedConstructor<T> constructor : annotatedType
                 .getConstructors()) {
-            injectionPoints.add(InjectionPointImpl.create(constructor, this));
+            if (constructor.isAnnotationPresent(Inject.class)) {
+                injectionPoints.add(InjectionPointImpl.create(constructor, this));
+            }
         }
+
         for (AnnotatedField<? super T> field : annotatedType.getFields()) {
-            injectionPoints.add(InjectionPointImpl.create(field, this));
+            if (field.isAnnotationPresent(Inject.class)) {
+                fieldInjectionPoints
+                        .add((BlinkInjectionPoint<T>) InjectionPointImpl
+                                .create(field, this));
+            }
         }
         for (AnnotatedMethod<? super T> method : annotatedType.getMethods()) {
-            injectionPoints.add(InjectionPointImpl.create(method, this));
+            if (method.isAnnotationPresent(Inject.class)) {
+                initializerMethodInjectionPoints
+                        .add((BlinkInjectionPoint<T>) InjectionPointImpl
+                                .create(method, this));
+            }
         }
+
+        injectionPoints.addAll(fieldInjectionPoints);
+        injectionPoints.addAll(initializerMethodInjectionPoints);
     }
 
     @Override
@@ -152,13 +175,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
     @Override
     public Class<? extends Annotation> getScope() {
-        for (Class<? extends Annotation> scope : SCOPES) {
-            if (annotatedType.isAnnotationPresent(scope)) {
-                return scope;
-            }
-        }
-
-        return DEFAULT_SCOPE;
+        return scope;
     }
 
     @Override
@@ -221,6 +238,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
         annotatedType = AnnotatedTypeImpl.create(beanClass);
         initName();
         initTypes();
+        initScope();
         initInjectionPoints();
         initAlternative();
         setInjectionTarget(new InjectionTargetImpl<T>(this));
@@ -260,13 +278,11 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
     @Override
     public Set<BlinkInjectionPoint<T>> getFieldInjectionPoints() {
-        // TODO Auto-generated method stub
-        return null;
+        return fieldInjectionPoints;
     }
 
     @Override
     public Set<BlinkInjectionPoint<T>> getInitializerMethodInjectionPoints() {
-        // TODO Auto-generated method stub
-        return null;
+        return initializerMethodInjectionPoints;
     }
 }
