@@ -13,7 +13,7 @@ import org.blink.beans.CreationalContextImpl;
 
 public abstract class AbstractContext implements Context {
 
-    private AtomicBoolean isActive;
+    private AtomicBoolean isActive = new AtomicBoolean(true);
 
     private Map<Contextual<?>, Object> contextualInstances = new ConcurrentHashMap<Contextual<?>, Object>();
 
@@ -37,25 +37,21 @@ public abstract class AbstractContext implements Context {
             return instance;
         }
 
-        //TODO rethink this
         if (creationalContext == null) {
-            return null;
+            throw new IllegalArgumentException("CreationContext cannot be null");
         }
-        // Check for incomplete instance, putting for circular references
+
         if (creationalContext instanceof CreationalContextImpl) {
-            CreationalContextImpl<?> cctx = (CreationalContextImpl<?>) creationalContext;
-            if (cctx.getCurrentInstance() != null) {
-                instance = (T) cctx.getCurrentInstance();
+            T incomplete = ((CreationalContextImpl<T>) creationalContext).getIncompleteInstance(contextual);
+            if (incomplete != null) {
+                return incomplete;
             }
         }
 
-        if (instance == null) {
-            instance = contextual.create(creationalContext);
-        }
+        instance = contextual.create(creationalContext);
 
         if (instance != null) {
             this.contextualInstances.put(contextual, instance);
-            //this.contextualInstances.put(contextual, creationalContext);
         }
 
         return instance;

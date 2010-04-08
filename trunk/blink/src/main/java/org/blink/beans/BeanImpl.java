@@ -4,6 +4,7 @@ import java.beans.Introspector;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,6 +15,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.Alternative;
+import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.spi.AnnotatedConstructor;
 import javax.enterprise.inject.spi.AnnotatedField;
 import javax.enterprise.inject.spi.AnnotatedMethod;
@@ -27,6 +29,9 @@ import org.blink.types.AnnotatedTypeImpl;
 import org.blink.types.BlinkAnnotatedType;
 import org.blink.types.injectionpoints.ConstructorInjectionPoint;
 import org.blink.types.injectionpoints.InjectionPointImpl;
+import org.blink.utils.ReflectionUtils;
+
+import com.google.common.collect.Sets;
 
 public class BeanImpl<T> implements BlinkBean<T> {
 
@@ -44,7 +49,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
     }
 
     private Class<T> beanClass;
-    private Set<Annotation> qualifiers;
+    private Set<Annotation> qualifiers = Sets.newHashSet();
     private Set<Class<? extends Annotation>> stereotypes;
     private Set<Type> types;
     private Set<InjectionPoint> injectionPoints;
@@ -66,6 +71,33 @@ public class BeanImpl<T> implements BlinkBean<T> {
     private void initAlternative() {
         alternative = beanClass.isAnnotationPresent(Alternative.class);
         // TODO xml alternatives
+    }
+
+    private void initTypes() {
+        if (getAnnotatedType().isAnnotationPresent(Typed.class)) {
+            this.types = getTypedTypes(ReflectionUtils.buildTypeMap(getAnnotatedType()
+                    .getTypeClosure()), getAnnotatedType().getJavaClass(),
+                    getAnnotatedType().getAnnotation(Typed.class));
+        } else {
+            this.types = new HashSet<Type>(getAnnotatedType().getTypeClosure());
+            if (beanClass.isInterface()) {
+                this.types.add(Object.class);
+            }
+        }
+    }
+
+    private Set<Type> getTypedTypes(Map<Class<?>, Type> typeClosure, Class<?> rawType,
+            Typed typed) {
+        Set<Type> types = new HashSet<Type>();
+        for (Class<?> specifiedClass : typed.value()) {
+            if (!typeClosure.containsKey(specifiedClass)) {
+                throw new DefinitionException("Typed class not in hierarchy", null);
+            } else {
+                types.add(typeClosure.get(specifiedClass));
+            }
+        }
+        types.add(Object.class);
+        return types;
     }
 
     private void initName() {
@@ -109,7 +141,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
     @Override
     public Set<Annotation> getQualifiers() {
-        return null;
+        return qualifiers;
     }
 
     @Override
@@ -131,7 +163,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
     @Override
     public Set<Type> getTypes() {
-        return null;
+        return types;
     }
 
     @Override
@@ -182,6 +214,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
     public void initialize() {
         annotatedType = AnnotatedTypeImpl.create(beanClass);
         initName();
+        initTypes();
         initInjectionPoints();
         initAlternative();
         setInjectionTarget(new InjectionTargetImpl<T>(this));

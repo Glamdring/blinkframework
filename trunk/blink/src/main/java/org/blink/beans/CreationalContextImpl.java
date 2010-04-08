@@ -53,8 +53,4 @@ public class CreationalContextImpl<T> implements CreationalContext<T>, Serializa
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public T getCurrentInstance() {
-        return (T) incompleteInstances.values().iterator().next();
-    }
 }
