@@ -13,7 +13,6 @@ import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.AnnotatedMember;
 import javax.enterprise.inject.spi.AnnotatedParameter;
 import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
 
 import org.blink.beans.BlinkBean;
 import org.blink.beans.ConfigurableBeanManager;
@@ -121,5 +120,12 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
     public String toString() {
         return "Name: " + getBean().getName() + "; " +
             "Type: " + getType() + "; ";
+    }
+
+    @Override
+    public void inject(T instance, ConfigurableBeanManager manager,
+            CreationalContext<T> creationContext) {
+
+        //TODO XXX inject
     }
 }

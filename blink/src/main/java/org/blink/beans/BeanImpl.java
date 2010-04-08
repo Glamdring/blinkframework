@@ -27,6 +27,7 @@ import javax.inject.Named;
 import org.blink.exceptions.DefinitionException;
 import org.blink.types.AnnotatedTypeImpl;
 import org.blink.types.BlinkAnnotatedType;
+import org.blink.types.injectionpoints.BlinkInjectionPoint;
 import org.blink.types.injectionpoints.ConstructorInjectionPoint;
 import org.blink.types.injectionpoints.InjectionPointImpl;
 import org.blink.utils.ReflectionUtils;
@@ -52,12 +53,16 @@ public class BeanImpl<T> implements BlinkBean<T> {
     private Set<Annotation> qualifiers = Sets.newHashSet();
     private Set<Class<? extends Annotation>> stereotypes;
     private Set<Type> types;
-    private Set<InjectionPoint> injectionPoints;
     private boolean alternative;
     private Class<? extends Annotation> scope;
     private boolean nullable;
     private BlinkAnnotatedType<T> annotatedType;
     private String name;
+
+    private Set<BlinkInjectionPoint<T>> injectionPoints;
+    private Set<BlinkInjectionPoint<T>> fieldInjectionPoints;
+    private Set<BlinkInjectionPoint<T>> initializerMethodInjectionPoints;
+
 
     private InjectionTarget<T> injectionTarget;
 
@@ -129,9 +134,10 @@ public class BeanImpl<T> implements BlinkBean<T> {
         return beanClass;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Set<InjectionPoint> getInjectionPoints() {
-        return injectionPoints;
+        return (Set) injectionPoints;
     }
 
     @Override
@@ -250,5 +256,17 @@ public class BeanImpl<T> implements BlinkBean<T> {
     @Override
     public ConfigurableBeanManager getBeanManager() {
         return beanManager;
+    }
+
+    @Override
+    public Set<BlinkInjectionPoint<T>> getFieldInjectionPoints() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Set<BlinkInjectionPoint<T>> getInitializerMethodInjectionPoints() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
