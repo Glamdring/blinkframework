@@ -23,7 +23,11 @@ import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Qualifier;
 
+import org.blink.core.AnyLiteral;
+import org.blink.core.DefaultLiteral;
+import org.blink.core.NewLiteral;
 import org.blink.exceptions.DefinitionException;
 import org.blink.types.AnnotatedTypeImpl;
 import org.blink.types.BlinkAnnotatedType;
@@ -242,9 +246,26 @@ public class BeanImpl<T> implements BlinkBean<T> {
         initName();
         initTypes();
         initScope();
-        initInjectionPoints();
+        initQualifiers();
         initAlternative();
+        initInjectionPoints();
         setInjectionTarget(new InjectionTargetImpl<T>(this));
+    }
+
+    private void initQualifiers() {
+        for (Annotation annotation: annotatedType.getAnnotations()) {
+            if (annotation.annotationType().isAnnotationPresent(Qualifier.class)) {
+                qualifiers.add(annotation);
+            }
+        }
+
+        if (qualifiers.size() == 0 || (qualifiers.size() == 1 && qualifiers.iterator().next().annotationType() == Named.class)) {
+            qualifiers.add(DefaultLiteral.INSTANCE);
+        }
+
+        if (!qualifiers.contains(NewLiteral.INSTANCE)) {
+            qualifiers.add(AnyLiteral.INSTANCE);
+        }
     }
 
     public ConstructorInjectionPoint<T> getBeanConstructorInjectionPoint() {

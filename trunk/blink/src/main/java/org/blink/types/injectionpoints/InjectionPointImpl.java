@@ -126,7 +126,10 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
        List<BlinkInjectionPoint<T>> result = new ArrayList<BlinkInjectionPoint<T>>(params.size());
 
        for (AnnotatedParameter<T> param : params) {
-           Set<Bean<?>> beans = getBlinkBean().getBeanManager().getBeans(param.getBaseType());
+            Set<Bean<?>> beans = getBlinkBean().getBeanManager().getBeans(
+                    param.getBaseType(),
+                    param.getAnnotations().toArray(
+                            new Annotation[param.getAnnotations().size()]));
            result.add(InjectionPointImpl.create(param, beans.iterator().next()));
        }
 
