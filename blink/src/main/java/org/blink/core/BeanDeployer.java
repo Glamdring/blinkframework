@@ -37,7 +37,7 @@ public class BeanDeployer {
 
             beanManager = BeanManagerImpl.getInstance();
             for (Class<?> clazz : classes) {
-                BlinkBean<?> bean = new BeanImpl(clazz);
+                BlinkBean<?> bean = new BeanImpl(clazz, beanManager);
                 bean.initialize();
                 beans.add(bean);
             }

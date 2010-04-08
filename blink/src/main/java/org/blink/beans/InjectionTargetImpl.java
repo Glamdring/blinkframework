@@ -15,6 +15,7 @@ import javax.enterprise.inject.spi.InjectionTarget;
 import org.blink.exceptions.BlinkException;
 import org.blink.exceptions.DefinitionException;
 import org.blink.types.BlinkAnnotatedType;
+import org.blink.types.injectionpoints.ConstructorInjectionPoint;
 
 public class InjectionTargetImpl<T> implements InjectionTarget<T> {
 
@@ -84,9 +85,8 @@ public class InjectionTargetImpl<T> implements InjectionTarget<T> {
     }
 
     @Override
-    public void dispose(T paramT) {
-        // TODO Auto-generated method stub
-
+    public void dispose(T instance) {
+        // No-op TODO ?
     }
 
     @Override
@@ -96,9 +96,12 @@ public class InjectionTargetImpl<T> implements InjectionTarget<T> {
 
     @Override
     public T produce(CreationalContext<T> creationalContext) {
-        InjectionPoint constructorInjectionPoint = bean.getBeanConstructorInjectionPoint();
-        // TODO XXX gather required parameters and produce
-
-        return null;
+        if (creationalContext == null) {
+            throw new IllegalArgumentException("The CreationalContext may not be null");
+        }
+        ConstructorInjectionPoint<T> constructorInjectionPoint = bean.getBeanConstructorInjectionPoint();
+        T instance = constructorInjectionPoint.newInstance(bean.getBeanManager(), creationalContext);
+        creationalContext.push(instance);
+        return instance;
     }
 }

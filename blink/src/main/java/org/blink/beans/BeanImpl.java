@@ -25,6 +25,7 @@ import javax.inject.Named;
 import org.blink.exceptions.DefinitionException;
 import org.blink.types.AnnotatedTypeImpl;
 import org.blink.types.BlinkAnnotatedType;
+import org.blink.types.injectionpoints.ConstructorInjectionPoint;
 import org.blink.types.injectionpoints.InjectionPointImpl;
 
 public class BeanImpl<T> implements BlinkBean<T> {
@@ -55,8 +56,11 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
     private InjectionTarget<T> injectionTarget;
 
-    public BeanImpl(Class<T> clazz) {
+    private ConfigurableBeanManager beanManager;
+
+    public BeanImpl(Class<T> clazz, ConfigurableBeanManager beanManager) {
         beanClass = clazz;
+        this.beanManager = beanManager;
     }
 
     private void initAlternative() {
@@ -183,9 +187,9 @@ public class BeanImpl<T> implements BlinkBean<T> {
         setInjectionTarget(new InjectionTargetImpl<T>(this));
     }
 
-    public InjectionPoint getBeanConstructorInjectionPoint() {
+    public ConstructorInjectionPoint<T> getBeanConstructorInjectionPoint() {
 
-        InjectionPoint constructorInjectionPoint = null;
+        ConstructorInjectionPoint<T> constructorInjectionPoint = null;
         Set<AnnotatedConstructor<T>> initializerAnnotatedConstructors = annotatedType
                 .getDeclaredConstructors(Inject.class);
         if (initializerAnnotatedConstructors.size() > 1) {
@@ -195,10 +199,10 @@ public class BeanImpl<T> implements BlinkBean<T> {
                         annotatedType);
             }
         } else if (initializerAnnotatedConstructors.size() == 1) {
-            constructorInjectionPoint = InjectionPointImpl.create(
+            constructorInjectionPoint = ConstructorInjectionPoint.create(
                     initializerAnnotatedConstructors.iterator().next(), this);
         } else if (annotatedType.getNoArgsAnnotatedConstructor() != null) {
-            constructorInjectionPoint = InjectionPointImpl.create(annotatedType
+            constructorInjectionPoint = ConstructorInjectionPoint.create(annotatedType
                     .getNoArgsAnnotatedConstructor(), this);
         }
 
@@ -208,5 +212,10 @@ public class BeanImpl<T> implements BlinkBean<T> {
         }
 
         return constructorInjectionPoint;
+    }
+
+    @Override
+    public ConfigurableBeanManager getBeanManager() {
+        return beanManager;
     }
 }

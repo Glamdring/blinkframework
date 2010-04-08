@@ -1,5 +1,9 @@
 package org.blink.core;
 
+import javax.enterprise.inject.spi.Bean;
+
+import org.blink.beans.CreationalContextImpl;
+
 
 
 public class Main {
@@ -8,6 +12,9 @@ public class Main {
         BeanDeployer b = new BeanDeployer();
         b.deploy();
 
-        b.getBeanManager().getBeans("sampleBean");
+        Bean bean = b.getBeanManager().getBeans("sampleBean").iterator().next();
+        SampleBean sb = (SampleBean) bean.create(new CreationalContextImpl<SampleBean>(bean));
+
+        System.out.println(sb.getBeanToInject());
     }
 }
