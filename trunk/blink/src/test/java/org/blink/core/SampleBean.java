@@ -9,7 +9,14 @@ public class SampleBean {
     @Inject
     private BeanToInject field;
 
+    private BeanToInject fieldByInitializer;
+
     private BeanToInject beanToInject;
+
+    @Inject
+    public void initi(BeanToInject f) {
+        this.fieldByInitializer = f;
+    }
 
     @Inject
     public SampleBean(BeanToInject beanToInject) {
@@ -30,5 +37,13 @@ public class SampleBean {
 
     public void setField(BeanToInject field) {
         this.field = field;
+    }
+
+    public BeanToInject getFieldByInitializer() {
+        return fieldByInitializer;
+    }
+
+    public void setFieldByInitializer(BeanToInject fieldByInitializer) {
+        this.fieldByInitializer = fieldByInitializer;
     }
 }

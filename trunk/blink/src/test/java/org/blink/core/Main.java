@@ -17,5 +17,6 @@ public class Main {
 
         System.out.println(sb.getBeanToInject());
         System.out.println(sb.getField());
+        System.out.println(sb.getFieldByInitializer());
     }
 }

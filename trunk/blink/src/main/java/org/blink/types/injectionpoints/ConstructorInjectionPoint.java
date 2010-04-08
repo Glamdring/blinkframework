@@ -29,19 +29,4 @@ public class ConstructorInjectionPoint<T> extends InjectionPointImpl<T> {
         T instance = constructor.newInstance(getParameterValues(getParameterInjectionPoints(), null, null, getBlinkBean().getBeanManager(), creationalContext));
         return instance;
     }
-
-    @SuppressWarnings("unchecked")
-    public List<BlinkInjectionPoint<T>> getParameterInjectionPoints()
-    {
-       final List<AnnotatedParameter<T>> params = ((AnnotatedConstructor<T>) getAnnotated()).getParameters();
-       List<BlinkInjectionPoint<T>> result = new ArrayList<BlinkInjectionPoint<T>>(params.size());
-
-       for (AnnotatedParameter<T> param : params) {
-           Set<Bean<?>> beans = getBlinkBean().getBeanManager().getBeans(param.getBaseType());
-           result.add(InjectionPointImpl.create(param, beans.iterator().next()));
-       }
-
-       return result;
-    }
-
 }

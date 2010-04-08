@@ -30,6 +30,7 @@ import org.blink.types.BlinkAnnotatedType;
 import org.blink.types.injectionpoints.BlinkInjectionPoint;
 import org.blink.types.injectionpoints.ConstructorInjectionPoint;
 import org.blink.types.injectionpoints.InjectionPointImpl;
+import org.blink.utils.ClassUtils;
 import org.blink.utils.ReflectionUtils;
 
 import com.google.common.collect.Sets;
@@ -141,7 +142,9 @@ public class BeanImpl<T> implements BlinkBean<T> {
             }
         }
         for (AnnotatedMethod<? super T> method : annotatedType.getMethods()) {
-            if (method.isAnnotationPresent(Inject.class)) {
+            if (method.isAnnotationPresent(Inject.class)
+                    && !ClassUtils.isStatic(method.getJavaMember().getModifiers())
+                    && !ClassUtils.isAbstract(method.getJavaMember().getModifiers())) {
                 initializerMethodInjectionPoints
                         .add((BlinkInjectionPoint<T>) InjectionPointImpl
                                 .create(method, this));
