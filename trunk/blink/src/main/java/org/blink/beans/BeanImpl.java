@@ -288,6 +288,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
         for (Annotation stereotypeAnnotation : stereotypeAnnotations) {
             Class<? extends Annotation> stereotype = stereotypeAnnotation.annotationType();
+
             stereotypes.add(stereotype);
             addStereotypes(Sets.newHashSet(stereotype.getAnnotations()));
         }
