@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Qualifier;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.blink.core.AnyLiteral;
 import org.blink.core.DefaultLiteral;
 import org.blink.core.NewLiteral;
@@ -86,9 +87,11 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
     private void initScope() {
         for (Class<? extends Annotation> scope : SCOPES) {
-            if (annotatedType.isAnnotationPresent(scope)) {
-                this.scope = scope;
-                return;
+            for (Annotation annotation : getBeanAnnotations()) {
+                if (scope.equals(annotation.annotationType())) {
+                    this.scope = scope;
+                    return;
+                }
             }
         }
 
