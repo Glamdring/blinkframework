@@ -26,9 +26,13 @@ public class BeanManagerTest {
         return b.getBeanManager();
     }
 
-    @SuppressWarnings("unchecked")
     private Object getBean(String name) {
-        Bean bean = deployAndGetManager().getBeans(name).iterator().next();
+        return getBean(deployAndGetManager(), name);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Object getBean(BeanManager manager, String name) {
+        Bean bean = manager.getBeans(name).iterator().next();
         Object b = bean.create(new CreationalContextImpl<SampleBean>(bean));
         return b;
     }
@@ -57,10 +61,17 @@ public class BeanManagerTest {
 
     @Test
     public void procuderTest() {
-        Consumer consumer = (Consumer) getBean("consumer");
+        BeanManager manager = deployAndGetManager();
+        Consumer consumer = (Consumer) getBean(manager, "consumer");
         NonBean nb = consumer.getNonBean();
         Assert.assertNotNull(
             "The NonBean is epxected to be generated and injected based on the procuder",
             nb);
+
+        Set<Bean<?>> bean = manager.getBeans(NonBean.class);
+
+        Assert.assertEquals(
+                "Scope mismatch", bean
+                        .iterator().next().getScope(), RequestScoped.class);
     }
 }
