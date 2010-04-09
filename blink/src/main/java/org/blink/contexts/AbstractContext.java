@@ -1,7 +1,5 @@
 package org.blink.contexts;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.enterprise.context.ContextNotActiveException;
@@ -15,23 +13,23 @@ public abstract class AbstractContext implements Context {
 
     private AtomicBoolean isActive = new AtomicBoolean(true);
 
-    private Map<Contextual<?>, Object> contextualInstances = new ConcurrentHashMap<Contextual<?>, Object>();
+    protected abstract <T> T getContextualInstance(Contextual<T> contextual);
+    protected abstract <T> void putContextualInstance(Contextual<T> contextual, T instance);
 
     @SuppressWarnings("unchecked")
     @Override
     public <T> T get(Contextual<T> contextual) {
         checkActive();
 
-        return (T) contextualInstances.get(contextual);
+        return (T) getContextualInstance(contextual);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T get(Contextual<T> contextual,
-            CreationalContext<T> creationalContext) {
+    public <T> T get(Contextual<T> contextual, CreationalContext<T> creationalContext) {
         checkActive();
 
-        T instance = (T) contextualInstances.get(contextual);
+        T instance = getContextualInstance(contextual);
 
         if (instance != null) {
             return instance;
@@ -42,7 +40,8 @@ public abstract class AbstractContext implements Context {
         }
 
         if (creationalContext instanceof CreationalContextImpl) {
-            T incomplete = ((CreationalContextImpl<T>) creationalContext).getIncompleteInstance(contextual);
+            T incomplete = ((CreationalContextImpl<T>) creationalContext)
+                    .getIncompleteInstance(contextual);
             if (incomplete != null) {
                 return incomplete;
             }
@@ -51,7 +50,7 @@ public abstract class AbstractContext implements Context {
         instance = contextual.create(creationalContext);
 
         if (instance != null) {
-            this.contextualInstances.put(contextual, instance);
+            putContextualInstance(contextual, instance);
         }
 
         return instance;
@@ -62,7 +61,7 @@ public abstract class AbstractContext implements Context {
         return isActive.get();
     }
 
-    private void checkActive() {
+    protected void checkActive() {
         if (!isActive()) {
             throw new ContextNotActiveException("Context of scope "
                     + getScope().getName() + " is not active");

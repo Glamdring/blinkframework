@@ -17,7 +17,8 @@ import org.blink.beans.BeanScanner;
 import org.blink.beans.BlinkBean;
 import org.blink.beans.ClasspathBeanScanner;
 import org.blink.beans.ConfigurableBeanManager;
-import org.blink.contexts.ApplicationContextImpl;
+import org.blink.contexts.ApplicationContext;
+import org.blink.contexts.RequestContext;
 import org.blink.exceptions.ContextInitializationException;
 
 public class BeanDeployer {
@@ -75,7 +76,8 @@ public class BeanDeployer {
     }
 
     private void addContexts() {
-        beanManager.addContext(new ApplicationContextImpl());
+        beanManager.addContext(new ApplicationContext());
+        beanManager.addContext(new RequestContext());
         // TODO more contexts
     }
 
