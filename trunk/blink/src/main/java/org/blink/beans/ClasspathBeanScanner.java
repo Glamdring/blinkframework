@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.decorator.Decorator;
+import javax.enterprise.inject.spi.Extension;
+
 import org.blink.exceptions.ContextInitializationException;
 import org.blink.utils.ClassUtils;
 import org.scannotation.AnnotationDB;
@@ -29,7 +32,13 @@ public class ClasspathBeanScanner implements BeanScanner {
                     for (String str : strSet) {
                         Class<?> clazz = ClassUtils.getClass(str);
 
-                        if (!clazz.isInterface() && !clazz.isAnnotation() && !ClassUtils.isAbstract(clazz.getModifiers())) {
+                        // See 3.1.1 of the JSR-299 spec
+                        if (!clazz.isInterface()
+                                && !clazz.isAnnotation()
+                                && !(ClassUtils.isInnerClass(clazz) && ClassUtils.isStatic(clazz.getModifiers()))
+                                && (!ClassUtils.isAbstract(clazz.getModifiers()) || clazz
+                                        .isAnnotationPresent(Decorator.class))
+                                && !Extension.class.isAssignableFrom(clazz)) {
                             classes.add(clazz);
                         }
                     }

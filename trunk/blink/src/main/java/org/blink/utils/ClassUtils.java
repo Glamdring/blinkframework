@@ -281,7 +281,7 @@ public final class ClassUtils {
      *            modifier
      * @return true or false
      */
-    public static boolean isInnerClazz(Class<?> clazz) {
+    public static boolean isInnerClass(Class<?> clazz) {
         Validate.notNull(clazz);
 
         return clazz.isMemberClass();

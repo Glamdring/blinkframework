@@ -15,6 +15,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.Alternative;
+import javax.enterprise.inject.Stereotype;
 import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.spi.AnnotatedConstructor;
 import javax.enterprise.inject.spi.AnnotatedField;
@@ -29,6 +30,7 @@ import org.blink.core.AnyLiteral;
 import org.blink.core.DefaultLiteral;
 import org.blink.core.NewLiteral;
 import org.blink.exceptions.DefinitionException;
+import org.blink.types.AnnotatedImpl;
 import org.blink.types.AnnotatedTypeImpl;
 import org.blink.types.BlinkAnnotatedType;
 import org.blink.types.injectionpoints.BlinkInjectionPoint;
@@ -90,6 +92,16 @@ public class BeanImpl<T> implements BlinkBean<T> {
             }
         }
 
+        // if no scope annotation is present, search the stereotypes:
+        for (Class<? extends Annotation> scope : SCOPES) {
+            for (Class<? extends Annotation> stereotype : stereotypes) {
+                if (stereotype.isAnnotationPresent(scope)) {
+                    this.scope = scope;
+                    return;
+                }
+            }
+        }
+
         scope = DEFAULT_SCOPE;
     }
 
@@ -106,7 +118,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
         }
     }
 
-    private Set<Type> getTypedTypes(Map<Class<?>, Type> typeClosure, @SuppressWarnings("unused") Class<?> rawType,
+    private Set<Type> getTypedTypes(Map<Class<?>, Type> typeClosure, Class<?> rawType,
             Typed typed) {
         Set<Type> types = new HashSet<Type>();
         for (Class<?> specifiedClass : typed.value()) {
@@ -121,6 +133,17 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
     private void initName() {
         Named named = beanClass.getAnnotation(Named.class);
+
+        // check stereotypes
+        if (named == null) {
+            for (Class<? extends Annotation> stereotype : stereotypes) {
+                if (stereotype.isAnnotationPresent(Named.class)) {
+                    named = stereotype.getAnnotation(Named.class);
+                    break;
+                }
+            }
+        }
+
         if (named != null) {
             name = named.value();
             if ("".equals(name) || name == null) {
@@ -187,8 +210,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
     @Override
     public Set<Class<? extends Annotation>> getStereotypes() {
-        // TODO Auto-generated method stub
-        return null;
+        return stereotypes;
     }
 
     @Override
@@ -243,6 +265,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
     @Override
     public void initialize() {
         annotatedType = AnnotatedTypeImpl.create(beanClass);
+        initStereotypes();
         initName();
         initTypes();
         initScope();
@@ -250,6 +273,24 @@ public class BeanImpl<T> implements BlinkBean<T> {
         initAlternative();
         initInjectionPoints();
         setInjectionTarget(new InjectionTargetImpl<T>(this));
+    }
+
+    private void initStereotypes() {
+        addStereotypes(annotatedType.getAnnotations());
+    }
+
+    /**
+     * Recursively adding stereotypes
+     * @param all annotations
+     */
+    private void addStereotypes(Set<Annotation> annotations) {
+        Set<Annotation> stereotypeAnnotations = AnnotatedImpl.getMetaAnnotations(annotations, Stereotype.class);
+
+        for (Annotation stereotypeAnnotation : stereotypeAnnotations) {
+            Class<? extends Annotation> stereotype = stereotypeAnnotation.annotationType();
+            stereotypes.add(stereotype);
+            addStereotypes(Sets.newHashSet(stereotype.getAnnotations()));
+        }
     }
 
     private void initQualifiers() {
