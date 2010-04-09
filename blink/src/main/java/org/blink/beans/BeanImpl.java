@@ -135,7 +135,13 @@ public class BeanImpl<T> implements BlinkBean<T> {
     }
 
     private void initName() {
-        Named named = beanClass.getAnnotation(Named.class);
+        Named named = null;
+        for (Annotation annotation : getBeanAnnotations()) {
+            if (annotation.annotationType().equals(Named.class)) {
+                named = (Named) annotation;
+                break;
+            }
+        }
 
         // check stereotypes
         if (named == null) {

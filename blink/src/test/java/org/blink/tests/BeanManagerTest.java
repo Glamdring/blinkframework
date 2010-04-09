@@ -68,10 +68,10 @@ public class BeanManagerTest {
             "The NonBean is epxected to be generated and injected based on the procuder",
             nb);
 
-        Set<Bean<?>> bean = manager.getBeans(NonBean.class);
+        Set<Bean<?>> beans = manager.getBeans(NonBean.class);
 
-        Assert.assertEquals(
-                "Scope mismatch", bean
-                        .iterator().next().getScope(), RequestScoped.class);
+        Bean<?> bean = beans.iterator().next();
+        Assert.assertEquals("Incorrect scope", RequestScoped.class, bean.getScope());
+        Assert.assertEquals(NonBean.TEST_CUSTOM_NAME, bean.getName());
     }
 }
