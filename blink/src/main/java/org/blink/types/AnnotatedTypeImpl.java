@@ -28,6 +28,7 @@ public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements
         return new AnnotatedTypeImpl<T>(clazz);
     }
 
+    @SuppressWarnings("unchecked")
     private AnnotatedTypeImpl(Class<T> clazz) {
         super(clazz);
         if (clazz == null) {

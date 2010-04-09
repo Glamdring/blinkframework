@@ -6,6 +6,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -23,6 +24,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.blink.beans.BlinkBean;
 import org.blink.beans.ConfigurableBeanManager;
 import org.blink.exceptions.BlinkException;
+import org.blink.exceptions.DefinitionException;
 import org.blink.types.AnnotatedImpl;
 import org.blink.utils.ClassUtils;
 
@@ -170,7 +172,15 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
         Set<Annotation> qualifiers = getQualifiers();
         Set<Bean<?>> beans = manager.getBeans(getType(), qualifiers
                 .toArray(new Annotation[qualifiers.size()]));
-        Object objectToInject = manager.getReference(beans.iterator().next(),
+
+        if (beans.size() != 1) {
+            throw new DefinitionException("Exactly one bean expected for type "
+                    + getType() + " and qualifiers: "
+                    + ArrayUtils.toString(Arrays.asList(qualifiers))
+                    + " but found " + beans.size(), null);
+        }
+        Bean<?> bean = beans.iterator().next();
+        Object objectToInject = manager.getReference(bean,
                 getType(), creationContext);
         Field field = (Field) getMember();
         field.setAccessible(true);
@@ -182,13 +192,13 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
     }
 
     @Override
-    public void invoke(T instance, ConfigurableBeanManager manager,
+    public Object invoke(T instance, ConfigurableBeanManager manager,
             CreationalContext<T> creationContext) {
 
         Method method = (Method) getMember();
         method.setAccessible(true);
         try {
-            method.invoke(instance, getParameterValues(
+            return method.invoke(instance, getParameterValues(
                     getParameterInjectionPoints(), null, null, getBlinkBean()
                             .getBeanManager(), creationContext));
         } catch (Exception ex) {
