@@ -3,6 +3,7 @@ package org.blink.core;
 import javax.enterprise.inject.spi.Bean;
 
 import org.blink.beans.CreationalContextImpl;
+import org.blink.tests.SampleBean;
 
 
 
@@ -15,8 +16,5 @@ public class Main {
         Bean bean = b.getBeanManager().getBeans("sampleBean").iterator().next();
         SampleBean sb = (SampleBean) bean.create(new CreationalContextImpl<SampleBean>(bean));
 
-        System.out.println(sb.getBeanToInject());
-        System.out.println(sb.getField());
-        System.out.println(sb.getFieldByInitializer());
     }
 }
