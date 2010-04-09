@@ -2,11 +2,13 @@ package org.blink.core;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
@@ -17,9 +19,12 @@ import org.blink.beans.BeanScanner;
 import org.blink.beans.BlinkBean;
 import org.blink.beans.ClasspathBeanScanner;
 import org.blink.beans.ConfigurableBeanManager;
+import org.blink.beans.ProducerMethodBean;
 import org.blink.contexts.ApplicationContext;
 import org.blink.contexts.RequestContext;
 import org.blink.exceptions.ContextInitializationException;
+
+import com.google.common.collect.Sets;
 
 public class BeanDeployer {
 
@@ -41,6 +46,9 @@ public class BeanDeployer {
                 BlinkBean<?> bean = new BeanImpl(clazz, beanManager);
                 bean.initialize();
                 beans.add(bean);
+
+                Set<Bean<?>> producerBeans = getProducerBeans(bean);
+                beans.addAll(producerBeans);
             }
             beanManager.initialize(beans);
 
@@ -49,6 +57,20 @@ public class BeanDeployer {
         } catch (Exception ex) {
             throw new ContextInitializationException(ex);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Set<Bean<?>> getProducerBeans(BlinkBean<?> bean) {
+        Set<Bean<?>> producers = Sets.newHashSet();
+        for (Method m : bean.getBeanClass().getMethods()) {
+            if (m.isAnnotationPresent(Produces.class)) {
+                ProducerMethodBean<?> producer = new ProducerMethodBean(bean, m, m.getReturnType(), bean.getBeanManager());
+                producer.initialize();
+                producers.add(producer);
+            }
+        }
+
+        return producers;
     }
 
     public void deploy() {

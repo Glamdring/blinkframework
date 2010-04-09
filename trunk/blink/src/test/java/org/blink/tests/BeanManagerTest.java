@@ -12,6 +12,8 @@ import org.blink.beans.CreationalContextImpl;
 import org.blink.beans.injection.BeanToInject;
 import org.blink.beans.injection.SampleBean;
 import org.blink.beans.injection.SecondBeanToInject;
+import org.blink.beans.producer.Consumer;
+import org.blink.beans.producer.NonBean;
 import org.blink.beans.stereotypes.StereotypedBean;
 import org.blink.core.BeanDeployer;
 import org.junit.Test;
@@ -51,5 +53,14 @@ public class BeanManagerTest {
         Assert.assertTrue("No stereotypes set", bean.getStereotypes().size() == 1);
         Assert.assertNotNull("Name not set", bean.getName());
         Assert.assertEquals("Incorrect scope", bean.getScope(), RequestScoped.class);
+    }
+
+    @Test
+    public void procuderTest() {
+        Consumer consumer = (Consumer) getBean("consumer");
+        NonBean nb = consumer.getNonBean();
+        Assert.assertNotNull(
+            "The NonBean is epxected to be generated and injected based on the procuder",
+            nb);
     }
 }

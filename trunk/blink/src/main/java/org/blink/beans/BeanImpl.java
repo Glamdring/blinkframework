@@ -276,7 +276,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
     }
 
     private void initStereotypes() {
-        addStereotypes(annotatedType.getAnnotations());
+        addStereotypes(getBeanAnnotations());
     }
 
     /**
@@ -295,7 +295,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
     }
 
     private void initQualifiers() {
-        for (Annotation annotation: annotatedType.getAnnotations()) {
+        for (Annotation annotation: getBeanAnnotations()) {
             if (annotation.annotationType().isAnnotationPresent(Qualifier.class)) {
                 qualifiers.add(annotation);
             }
@@ -308,6 +308,10 @@ public class BeanImpl<T> implements BlinkBean<T> {
         if (!qualifiers.contains(NewLiteral.INSTANCE)) {
             qualifiers.add(AnyLiteral.INSTANCE);
         }
+    }
+
+    protected Set<Annotation> getBeanAnnotations() {
+        return annotatedType.getAnnotations();
     }
 
     public ConstructorInjectionPoint<T> getBeanConstructorInjectionPoint() {
@@ -330,6 +334,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
         }
 
         if (constructorInjectionPoint == null) {
+
             throw new DefinitionException("No suitable constructor",
                     annotatedType);
         }

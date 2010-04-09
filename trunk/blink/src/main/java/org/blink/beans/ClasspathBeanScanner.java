@@ -1,5 +1,6 @@
 package org.blink.beans;
 
+import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.Set;
 
 import javax.decorator.Decorator;
 import javax.enterprise.inject.spi.Extension;
+import javax.inject.Inject;
 
 import org.blink.exceptions.ContextInitializationException;
 import org.blink.utils.ClassUtils;
@@ -38,7 +40,8 @@ public class ClasspathBeanScanner implements BeanScanner {
                                 && !(ClassUtils.isInnerClass(clazz) && ClassUtils.isStatic(clazz.getModifiers()))
                                 && (!ClassUtils.isAbstract(clazz.getModifiers()) || clazz
                                         .isAnnotationPresent(Decorator.class))
-                                && !Extension.class.isAssignableFrom(clazz)) {
+                                && !Extension.class.isAssignableFrom(clazz)
+                                && hasAppropriateConstructor(clazz)) {
                             classes.add(clazz);
                         }
                     }
@@ -49,6 +52,16 @@ public class ClasspathBeanScanner implements BeanScanner {
         } catch (Exception ex) {
             throw new ContextInitializationException(ex);
         }
+    }
+
+    private boolean hasAppropriateConstructor(Class<?> clazz) {
+        for (Constructor c : clazz.getDeclaredConstructors()) {
+            if (c.getParameterTypes().length == 0 || c.isAnnotationPresent(Inject.class)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private URL[] getBeanArchives() {
