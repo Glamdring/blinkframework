@@ -1,4 +1,4 @@
-package org.blink.core;
+package org.blink.tests;
 
 @First
 public class BeanToInject implements InterfaceToInject {

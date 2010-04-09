@@ -1,4 +1,4 @@
-package org.blink.core;
+package org.blink.tests;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

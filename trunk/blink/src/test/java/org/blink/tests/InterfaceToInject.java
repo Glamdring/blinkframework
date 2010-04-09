@@ -1,4 +1,4 @@
-package org.blink.core;
+package org.blink.tests;
 
 public interface InterfaceToInject {
 
