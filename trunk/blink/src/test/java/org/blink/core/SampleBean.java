@@ -6,44 +6,45 @@ import javax.inject.Named;
 @Named
 public class SampleBean {
 
+    @Inject @First
+    private InterfaceToInject field;
+
+    private InterfaceToInject fieldByInitializer;
+
+    private InterfaceToInject beanToInject;
+
     @Inject
-    private BeanToInject field;
-
-    private BeanToInject fieldByInitializer;
-
-    private BeanToInject beanToInject;
-
-    @Inject
-    public void initi(BeanToInject f) {
+    public void initialize(@First BeanToInject f) {
         this.fieldByInitializer = f;
     }
 
     @Inject
-    public SampleBean(BeanToInject beanToInject) {
+    public SampleBean(@Second InterfaceToInject beanToInject) {
         this.beanToInject = beanToInject;
     }
 
-    public BeanToInject getBeanToInject() {
-        return beanToInject;
-    }
-
-    public void setBeanToInject(BeanToInject beanToInject) {
-        this.beanToInject = beanToInject;
-    }
-
-    public BeanToInject getField() {
+    public InterfaceToInject getField() {
         return field;
     }
 
-    public void setField(BeanToInject field) {
+    public void setField(InterfaceToInject field) {
         this.field = field;
     }
 
-    public BeanToInject getFieldByInitializer() {
+    public InterfaceToInject getFieldByInitializer() {
         return fieldByInitializer;
     }
 
-    public void setFieldByInitializer(BeanToInject fieldByInitializer) {
+    public void setFieldByInitializer(InterfaceToInject fieldByInitializer) {
         this.fieldByInitializer = fieldByInitializer;
     }
+
+    public InterfaceToInject getBeanToInject() {
+        return beanToInject;
+    }
+
+    public void setBeanToInject(InterfaceToInject beanToInject) {
+        this.beanToInject = beanToInject;
+    }
+
 }

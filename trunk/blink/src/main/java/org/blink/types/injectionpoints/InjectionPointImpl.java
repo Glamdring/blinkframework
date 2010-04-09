@@ -19,6 +19,7 @@ import javax.enterprise.inject.spi.AnnotatedParameter;
 import javax.enterprise.inject.spi.Bean;
 import javax.inject.Qualifier;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.blink.beans.BlinkBean;
 import org.blink.beans.ConfigurableBeanManager;
 import org.blink.exceptions.BlinkException;
@@ -136,11 +137,21 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
             Set<Annotation> qualifiers = AnnotatedImpl.getMetaAnnotations(param
                     .getAnnotations(), Qualifier.class);
 
+            Annotation[] qualifiersArray = qualifiers.toArray(new Annotation[qualifiers.size()]);
+
             Set<Bean<?>> beans = getBlinkBean().getBeanManager().getBeans(
-                    param.getBaseType(),
-                    qualifiers.toArray(new Annotation[qualifiers.size()]));
-            result.add(InjectionPointImpl
+                    param.getBaseType(), qualifiersArray);
+
+
+            if (beans.size() == 1) {
+                result.add(InjectionPointImpl
                     .create(param, beans.iterator().next()));
+            } else {
+                throw new BlinkException("Exactly one bean of type "
+                        + param.getBaseType() + " and qualifiers "
+                        + ArrayUtils.toString(qualifiersArray) + " is expected, but "
+                        + beans.size() + " were found");
+            }
         }
 
         return result;
