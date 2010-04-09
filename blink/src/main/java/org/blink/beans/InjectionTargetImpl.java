@@ -37,7 +37,7 @@ public class InjectionTargetImpl<T> implements InjectionTarget<T> {
             Class<? extends Annotation> annotation) {
         List<AnnotatedMethod<? super T>> methods = new ArrayList<AnnotatedMethod<? super T>>();
         BlinkAnnotatedType<T> t = type;
-        while (!t.getJavaClass().equals(Object.class)) {
+        while (t != null && !t.getJavaClass().equals(Object.class)) {
             Set<AnnotatedMethod<? super T>> declaredMethods = t
                     .getDeclaredMethods(annotation);
             if (declaredMethods.size() > 1) {

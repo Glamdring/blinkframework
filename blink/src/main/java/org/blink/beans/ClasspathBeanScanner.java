@@ -27,7 +27,11 @@ public class ClasspathBeanScanner implements BeanScanner {
                 Set<String> strSet = index.keySet();
                 if (strSet != null) {
                     for (String str : strSet) {
-                        classes.add(ClassUtils.getClass(str));
+                        Class<?> clazz = ClassUtils.getClass(str);
+
+                        if (!clazz.isInterface() && !clazz.isAnnotation() && !ClassUtils.isAbstract(clazz.getModifiers())) {
+                            classes.add(clazz);
+                        }
                     }
                 }
             }

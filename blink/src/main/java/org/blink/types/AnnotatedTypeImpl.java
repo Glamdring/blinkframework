@@ -102,7 +102,12 @@ public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements
     @Override
     public BlinkAnnotatedType<T> getAnnotatedSuperclass() {
         // TODO load from a cache
-        return (BlinkAnnotatedType<T>) AnnotatedTypeImpl.create(clazz.getSuperclass());
+        Class<?> superclass = clazz.getSuperclass();
+        if (superclass != null && superclass != Object.class) {
+            return (BlinkAnnotatedType<T>) AnnotatedTypeImpl.create(superclass);
+        }
+
+        return null;
     }
 
     @Override

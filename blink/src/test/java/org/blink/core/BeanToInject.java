@@ -1,8 +1,8 @@
 package org.blink.core;
 
-public class BeanToInject {
+@First
+public class BeanToInject implements InterfaceToInject {
 
     public BeanToInject() {
     }
-
 }

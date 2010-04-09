@@ -23,6 +23,7 @@ import javax.enterprise.inject.spi.InterceptionType;
 import javax.enterprise.inject.spi.Interceptor;
 import javax.enterprise.inject.spi.ObserverMethod;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.blink.types.AnnotatedTypeImpl;
 
 import com.google.common.collect.Maps;
