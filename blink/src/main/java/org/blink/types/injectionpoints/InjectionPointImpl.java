@@ -25,7 +25,6 @@ import org.blink.beans.BlinkBean;
 import org.blink.beans.ConfigurableBeanManager;
 import org.blink.exceptions.BlinkException;
 import org.blink.exceptions.DefinitionException;
-import org.blink.types.AnnotatedImpl;
 import org.blink.utils.ClassUtils;
 
 public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
@@ -70,7 +69,7 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
 
     @Override
     public Set<Annotation> getQualifiers() {
-        return AnnotatedImpl.getMetaAnnotations(annotated.getAnnotations(),
+        return ClassUtils.getMetaAnnotations(annotated.getAnnotations(),
                 Qualifier.class);
     }
 
@@ -136,7 +135,7 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
                 params.size());
 
         for (AnnotatedParameter<T> param : params) {
-            Set<Annotation> qualifiers = AnnotatedImpl.getMetaAnnotations(param
+            Set<Annotation> qualifiers = ClassUtils.getMetaAnnotations(param
                     .getAnnotations(), Qualifier.class);
 
             Annotation[] qualifiersArray = qualifiers.toArray(new Annotation[qualifiers.size()]);
@@ -177,7 +176,7 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
             throw new DefinitionException("Exactly one bean expected for type "
                     + getType() + " and qualifiers: "
                     + ArrayUtils.toString(Arrays.asList(qualifiers))
-                    + " but found " + beans.size(), null);
+                    + " but found " + beans.size());
         }
         Bean<?> bean = beans.iterator().next();
         Object objectToInject = manager.getReference(bean,

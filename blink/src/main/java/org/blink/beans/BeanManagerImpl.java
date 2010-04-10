@@ -22,9 +22,11 @@ import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.InterceptionType;
 import javax.enterprise.inject.spi.Interceptor;
 import javax.enterprise.inject.spi.ObserverMethod;
+import javax.inject.Qualifier;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.blink.types.AnnotatedTypeImpl;
+import org.blink.utils.ClassUtils;
 
 import com.google.common.collect.Maps;
 
@@ -87,13 +89,22 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         return new CreationalContextImpl<T>(contextual);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> InjectionTarget<T> createInjectionTarget(
             AnnotatedType<T> annotatedType) {
 
         //TODO ?? create another constructor of injection target?
-        //return new InjectionTargetImpl<T>(annotatedType);
-        return null;
+
+        Set<Annotation> qualifiers = ClassUtils.getMetaAnnotations(annotatedType.getAnnotations(), Qualifier.class);
+        Set<Bean<?>> beans = getBeans(annotatedType.getBaseType(), qualifiers.toArray(new Annotation[qualifiers.size()]));
+
+        if (beans.size() == 1) {
+            return new InjectionTargetImpl<T>((BlinkBean<T>) beans.iterator().next());
+        } else {
+            // TODO throw definition exception
+            return null;
+        }
     }
 
     @Override
@@ -262,4 +273,23 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (Bean<?> bean : beans) {
+            sb.append("Bean name: "
+                    + bean.getName()
+                    + "; class: "
+                    + bean.getBeanClass()
+                    + "; types: "
+                    + ArrayUtils.toString(bean.getTypes().toArray())
+                    + "; qualifiers: "
+                    + ArrayUtils.toString(bean.getQualifiers().toArray())
+                    + "\n\n");
+        }
+
+        return sb.toString();
+    }
+
 }

@@ -35,6 +35,8 @@ import javax.enterprise.inject.spi.InjectionPoint;
 import org.apache.commons.lang.Validate;
 import org.blink.exceptions.BlinkException;
 
+import com.google.common.collect.Sets;
+
 /**
  * Utility classes with respect to the class operations.
  *
@@ -597,7 +599,20 @@ public final class ClassUtils {
         return Package.getPackage(packageName);
     }
 
-    /**
+    public static Set<Annotation> getMetaAnnotations(Set<Annotation> annotations,
+	        Class<? extends Annotation> metaAnnotationType) {
+	    Set<Annotation> subset = Sets.newHashSet();
+	
+	    for (Annotation annotation : annotations) {
+	        if (annotation.annotationType().isAnnotationPresent(metaAnnotationType)) {
+	            subset.add(annotation);
+	        }
+	    }
+	
+	    return subset;
+	}
+
+	/**
      * Returns true if type is an instance of <code>ParameterizedType</code>
      * else otherwise.
      *

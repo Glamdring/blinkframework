@@ -9,7 +9,6 @@ import javax.enterprise.inject.spi.Annotated;
 
 import org.blink.utils.ClassUtils;
 
-import com.google.common.collect.Sets;
 
 public class AnnotatedImpl implements Annotated {
 
@@ -66,18 +65,4 @@ public class AnnotatedImpl implements Annotated {
             this.annotations.add(annotation);
         }
     }
-
-    public static Set<Annotation> getMetaAnnotations(Set<Annotation> annotations,
-            Class<? extends Annotation> metaAnnotationType) {
-        Set<Annotation> subset = Sets.newHashSet();
-
-        for (Annotation annotation : annotations) {
-            if (annotation.annotationType().isAnnotationPresent(metaAnnotationType)) {
-                subset.add(annotation);
-            }
-        }
-
-        return subset;
-    }
-
 }

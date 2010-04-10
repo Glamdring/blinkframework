@@ -3,17 +3,33 @@ package org.blink.beans.producer;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.blink.beans.injection.First;
+import org.blink.beans.injection.Second;
+
 @Named
 public class Consumer {
 
     @Inject
-    private NonBean nonBean;
+    @Second
+    private NonBean nonBeanSecond;
 
-    public NonBean getNonBean() {
-        return nonBean;
+    @Inject
+    @First
+    private NonBean nonBeanFirst;
+
+    public NonBean getNonBeanSecond() {
+        return nonBeanSecond;
     }
 
-    public void setNonBean(NonBean nonBean) {
-        this.nonBean = nonBean;
+    public void setNonBeanSecond(NonBean nonBean) {
+        this.nonBeanSecond = nonBean;
+    }
+
+    public NonBean getNonBeanFirst() {
+        return nonBeanFirst;
+    }
+
+    public void setNonBeanFirst(NonBean nonBeanFirst) {
+        this.nonBeanFirst = nonBeanFirst;
     }
 }
