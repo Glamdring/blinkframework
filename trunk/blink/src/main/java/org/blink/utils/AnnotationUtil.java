@@ -1,5 +1,8 @@
 package org.blink.utils;
 
+
+//TODO cleanup unused utils ?
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -14,15 +17,12 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Stereotype;
 import javax.enterprise.inject.spi.AnnotatedMethod;
 import javax.enterprise.inject.spi.AnnotatedParameter;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.util.Nonbinding;
 
 import org.apache.commons.lang.Validate;
-import org.blink.core.DefaultLiteral;
-import org.blink.exceptions.ContextInitializationException;
 
 /**
  * Utility class related with {@link Annotation} operations.
@@ -325,52 +325,6 @@ public final class AnnotationUtil {
         return (Class<?>) type;
     }
 
-    /**
-     * Gets the method first found parameter qualifiers.
-     *
-     * @param method
-     *            method
-     * @param annotation
-     *            checking annotation
-     * @return annotation array
-     */
-    public static Annotation[] getMethodFirstParameterQualifierWithGivenAnnotation(
-            Method method, Class<? extends Annotation> clazz) {
-        Validate.notNull(method, "Method argument can not be null");
-        Validate.notNull(clazz);
-
-        Annotation[][] parameterAnns = method.getParameterAnnotations();
-        List<Annotation> list = new ArrayList<Annotation>();
-        Annotation[] result = null;
-
-        int index = 0;
-        for (Annotation[] parameters : parameterAnns) {
-            boolean found = false;
-            for (Annotation param : parameters) {
-                Class<? extends Annotation> btype = param.annotationType();
-                if (btype.equals(clazz)) {
-                    found = true;
-                    continue;
-                }
-
-                if (AnnotationUtil.isQualifierAnnotation(btype)) {
-                    list.add(param);
-                }
-
-            }
-
-            if (found) {
-                result = new Annotation[list.size()];
-                result = list.toArray(result);
-                return result;
-            }
-
-            index++;
-
-        }
-        result = new Annotation[0];
-        return result;
-    }
 
     /**
      * Get the Type of the method parameter which has the given annotation
@@ -596,35 +550,6 @@ public final class AnnotationUtil {
         return srcBuf;
     }
 
-    /**
-     * Gets the array of qualifier annotations on the given array.
-     *
-     * @param annotations
-     *            annotation array
-     * @return array containing qualifier anns
-     */
-    public static Annotation[] getQualifierAnnotations(
-            Annotation... annotations) {
-        Validate.notNull(annotations, "Annotations argument can not be null");
-
-        Set<Annotation> set = new HashSet<Annotation>();
-
-        for (Annotation annot : annotations) {
-            if (AnnotationUtil.isQualifierAnnotation(annot.annotationType())) {
-                set.add(annot);
-            }
-        }
-
-        // Add the default qualifier if no others exist. Section 3.10.
-        if (set.size() == 0) {
-            set.add(new DefaultLiteral());
-        }
-
-        Annotation[] a = new Annotation[set.size()];
-        a = set.toArray(a);
-
-        return a;
-    }
 
     /**
      * Gets the array of resource annotations on the given array.
@@ -850,44 +775,7 @@ public final class AnnotationUtil {
         }
     }
 
-    private static void checkQualifierConditions(Annotation ann) {
-        Method[] methods = ann.annotationType().getDeclaredMethods();
 
-        for (Method method : methods) {
-            Class<?> clazz = method.getReturnType();
-            if (clazz.isArray() || clazz.isAnnotation()) {
-                if (!AnnotationUtil.hasAnnotation(method
-                        .getDeclaredAnnotations(), Nonbinding.class)) {
-                    throw new ContextInitializationException(
-                            "@Qualifier : "
-                                    + ann.annotationType().getName()
-                                    + " must have @NonBinding valued members for its array-valued and annotation valued members");
-                }
-            }
-        }
-
-        if (!AnnotationUtil.isQualifierAnnotation(ann.annotationType())) {
-            throw new IllegalArgumentException(
-                    "Qualifier annotations must be annotated with @Qualifier");
-        }
-    }
-
-    /**
-     * Returns true if the annotation is defined in xml or annotated with
-     * {@link javax.inject.Qualifier} false otherwise.
-     *
-     * @param clazz
-     *            type of the annotation
-     * @return true if the annotation is defined in xml or annotated with
-     *         {@link javax.inject.Qualifier} false otherwise
-     */
-    public static boolean isQualifierAnnotation(
-            Class<? extends Annotation> clazz) {
-        Validate.notNull(clazz);
-        //TODO
-
-        return false;
-    }
 
     /**
      * Returns true if any binding exist
@@ -1024,106 +912,6 @@ public final class AnnotationUtil {
         return getInterceptorBindingMetaAnnotations(anns);
     }
 
-    public static Annotation[] getStereotypeMetaAnnotations(Annotation[] anns) {
-        Validate.notNull(anns, "anns parameter can not be null");
-        List<Annotation> interAnns = new ArrayList<Annotation>();
-
-        for (Annotation ann : anns) {
-            if (isStereoTypeAnnotation(ann.annotationType())) {
-                interAnns.add(ann);
-
-                // check for transitive
-                Annotation[] transitives = getTransitiveStereoTypes(ann
-                        .annotationType().getDeclaredAnnotations());
-
-                for (Annotation transitive : transitives) {
-                    interAnns.add(transitive);
-                }
-            }
-        }
-
-        Annotation[] ret = new Annotation[interAnns.size()];
-        ret = interAnns.toArray(ret);
-
-        return ret;
-    }
-
-    private static Annotation[] getTransitiveStereoTypes(Annotation[] anns) {
-        return getStereotypeMetaAnnotations(anns);
-    }
-
-    public static boolean hasStereoTypeMetaAnnotation(Annotation[] anns) {
-        Validate.notNull(anns, "anns parameter can not be null");
-
-        for (Annotation ann : anns) {
-            if (isStereoTypeAnnotation(ann.annotationType())) {
-                return true;
-            }
-            continue;
-        }
-
-        return false;
-    }
-
-    /**
-     * Returns true if the annotation is defined in xml or annotated with
-     * {@link Stereotype} false otherwise.
-     *
-     * @param clazz
-     *            type of the annotation
-     * @return true if the annotation is defined in xml or annotated with
-     *         {@link Stereotype} false otherwise
-     */
-    public static boolean isStereoTypeAnnotation(
-            Class<? extends Annotation> clazz) {
-        Validate.notNull(clazz);
-        //TODO
-        return false;
-    }
-
-    /**
-     * If the bean extends generic class via {@link Realizes} annotation,
-     * realized based producer methods, fields and observer methods qualifier is
-     *
-     * <ul>
-     * <li>Qualifiers on the definitions</li>
-     * <li>Plus class qualifiers</li>
-     * <li>Minus generic class qualifiers</li>
-     * </ul>
-     *
-     * @param clazz
-     *            realized definition class
-     * @param anns
-     *            binding annotations array
-     */
-    public static Annotation[] getRealizesGenericAnnotations(Class<?> clazz,
-            Annotation[] anns) {
-        Set<Annotation> setAnnots = new HashSet<Annotation>();
-
-        for (Annotation definedAnn : anns) {
-            setAnnots.add(definedAnn);
-        }
-
-        Annotation[] genericReliazesAnns = AnnotationUtil
-                .getQualifierAnnotations(clazz.getSuperclass()
-                        .getDeclaredAnnotations());
-
-        for (Annotation generic : genericReliazesAnns) {
-            setAnnots.remove(generic);
-        }
-
-        genericReliazesAnns = AnnotationUtil.getQualifierAnnotations(clazz
-                .getDeclaredAnnotations());
-
-        for (Annotation generic : genericReliazesAnns) {
-            setAnnots.add(generic);
-        }
-
-        Annotation[] annots = new Annotation[setAnnots.size()];
-        annots = setAnnots.toArray(annots);
-
-        return annots;
-    }
 
     public static Annotation[] getAnnotationsFromSet(Set<Annotation> set) {
         if (set != null) {
