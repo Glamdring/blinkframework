@@ -2,6 +2,7 @@ package org.blink.core;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.HashSet;
@@ -19,6 +20,7 @@ import org.blink.beans.BeanScanner;
 import org.blink.beans.BlinkBean;
 import org.blink.beans.ClasspathBeanScanner;
 import org.blink.beans.ConfigurableBeanManager;
+import org.blink.beans.ProducerFieldBean;
 import org.blink.beans.ProducerMethodBean;
 import org.blink.contexts.ApplicationContext;
 import org.blink.contexts.RequestContext;
@@ -65,6 +67,14 @@ public class BeanDeployer {
         for (Method m : bean.getBeanClass().getMethods()) {
             if (m.isAnnotationPresent(Produces.class)) {
                 ProducerMethodBean<?> producer = new ProducerMethodBean(bean, m, m.getReturnType(), bean.getBeanManager());
+                producer.initialize();
+                producers.add(producer);
+            }
+        }
+
+        for (Field f : bean.getBeanClass().getDeclaredFields()) {
+            if (f.isAnnotationPresent(Produces.class)) {
+                ProducerFieldBean<?> producer = new ProducerFieldBean(bean, f, f.getType(), bean.getBeanManager());
                 producer.initialize();
                 producers.add(producer);
             }

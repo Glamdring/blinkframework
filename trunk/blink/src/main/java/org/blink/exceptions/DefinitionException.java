@@ -10,6 +10,11 @@ public class DefinitionException extends BlinkException {
         super(message + " in " + type.getJavaClass().getName());
         this.type = type;
     }
+
+    public DefinitionException(String message) {
+        super(message);
+    }
+
     public BlinkAnnotatedType<?> getType() {
         return type;
     }

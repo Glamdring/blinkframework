@@ -18,9 +18,11 @@ public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements
 
     private final Class<T> clazz;
 
-    private Set<AnnotatedConstructor<T>> annotatedConstructors = Sets.newHashSet();
+    private Set<AnnotatedConstructor<T>> annotatedConstructors = Sets
+            .newHashSet();
     private Set<AnnotatedField<? super T>> annotatedFields = Sets.newHashSet();
-    private Set<AnnotatedMethod<? super T>> annotatedMethods = Sets.newHashSet();
+    private Set<AnnotatedMethod<? super T>> annotatedMethods = Sets
+            .newHashSet();
 
     private AnnotatedConstructor<T> noArgConstructor;
 
@@ -39,18 +41,24 @@ public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements
         Constructor<T>[] constructors = (Constructor<T>[]) clazz
                 .getDeclaredConstructors();
         for (Constructor<T> constructor : constructors) {
-            annotatedConstructors.add(new AnnotatedConstructorImpl<T>(this,
-                    constructor));
+            if (constructor.getAnnotations().length > 0) {
+                annotatedConstructors.add(new AnnotatedConstructorImpl<T>(this,
+                        constructor));
+            }
         }
 
         Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
-            annotatedFields.add(new AnnotatedFieldImpl<T>(this, field));
+            if (field.getAnnotations().length > 0) {
+                annotatedFields.add(new AnnotatedFieldImpl<T>(this, field));
+            }
         }
 
         Method[] methods = clazz.getDeclaredMethods();
         for (Method method : methods) {
-            annotatedMethods.add(new AnnotatedMethodImpl<T>(this, method));
+            if (method.getAnnotations().length > 0) {
+                annotatedMethods.add(new AnnotatedMethodImpl<T>(this, method));
+            }
         }
 
         setAnnotations(clazz.getAnnotations());
@@ -58,10 +66,12 @@ public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements
         initNoArgContructor();
     }
 
+    @SuppressWarnings("unchecked")
     private void initNoArgContructor() {
-        for (AnnotatedConstructor<T> constructor : getConstructors()) {
-            if (constructor.getParameters().size() == 0) {
-                noArgConstructor = constructor;
+        for (Constructor<?> constructor : getJavaClass().getConstructors()) {
+            if (constructor.getParameterTypes().length == 0) {
+                noArgConstructor = new AnnotatedConstructorImpl<T>(this,
+                        (Constructor<T>) constructor);
             }
         }
     }

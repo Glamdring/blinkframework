@@ -2,15 +2,19 @@ package org.blink.tests;
 
 import java.util.Set;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.util.AnnotationLiteral;
 
 import junit.framework.Assert;
 
 import org.blink.beans.CreationalContextImpl;
 import org.blink.beans.injection.BeanToInject;
+import org.blink.beans.injection.First;
 import org.blink.beans.injection.SampleBean;
+import org.blink.beans.injection.Second;
 import org.blink.beans.injection.SecondBeanToInject;
 import org.blink.beans.producer.Consumer;
 import org.blink.beans.producer.NonBean;
@@ -60,18 +64,35 @@ public class BeanManagerTest {
     }
 
     @Test
-    public void procuderTest() {
+    public void procuderMethodTest() {
         BeanManager manager = deployAndGetManager();
         Consumer consumer = (Consumer) getBean(manager, "consumer");
-        NonBean nb = consumer.getNonBean();
+        NonBean nb = consumer.getNonBeanSecond();
         Assert.assertNotNull(
             "The NonBean is epxected to be generated and injected based on the procuder",
             nb);
 
-        Set<Bean<?>> beans = manager.getBeans(NonBean.class);
+        Set<Bean<?>> beans = manager.getBeans(NonBean.class, new AnnotationLiteral<Second>(){});
 
         Bean<?> bean = beans.iterator().next();
         Assert.assertEquals("Incorrect scope", RequestScoped.class, bean.getScope());
         Assert.assertEquals(NonBean.TEST_CUSTOM_NAME, bean.getName());
+    }
+
+
+    @Test
+    public void procuderFieldTest() {
+        BeanManager manager = deployAndGetManager();
+        Consumer consumer = (Consumer) getBean(manager, "consumer");
+        NonBean nb = consumer.getNonBeanFirst();
+        Assert.assertNotNull(
+            "The NonBean is epxected to be generated and injected based on the procuder",
+            nb);
+
+        Set<Bean<?>> beans = manager.getBeans(NonBean.class, new AnnotationLiteral<First>(){});
+
+        Bean<?> bean = beans.iterator().next();
+        Assert.assertEquals("Incorrect scope", ApplicationScoped.class, bean.getScope());
+        Assert.assertNull("Name must be null", bean.getName());
     }
 }

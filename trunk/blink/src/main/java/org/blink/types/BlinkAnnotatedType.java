@@ -15,5 +15,10 @@ public interface BlinkAnnotatedType<T> extends AnnotatedType<T> {
 
     BlinkAnnotatedType<T> getAnnotatedSuperclass();
 
+    /**
+     * No no-arg constructor may not be annotated, but is still returned as AnnotatedConstructor
+     * That is in order to fit in the general mechanism for creating beans
+     * @return no args constructor
+     */
     AnnotatedConstructor<T> getNoArgsAnnotatedConstructor();
 }

@@ -26,6 +26,7 @@ public class ProducerMethodBean<T> extends BeanImpl<T> {
         super(clazz, beanManager);
 
         this.method = method;
+        method.setAccessible(true);
         this.ownerBean = ownerBean;
     }
 

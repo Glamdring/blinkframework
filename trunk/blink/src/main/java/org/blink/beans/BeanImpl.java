@@ -31,7 +31,6 @@ import org.blink.core.AnyLiteral;
 import org.blink.core.DefaultLiteral;
 import org.blink.core.NewLiteral;
 import org.blink.exceptions.DefinitionException;
-import org.blink.types.AnnotatedImpl;
 import org.blink.types.AnnotatedTypeImpl;
 import org.blink.types.BlinkAnnotatedType;
 import org.blink.types.injectionpoints.BlinkInjectionPoint;
@@ -293,7 +292,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
      * @param all annotations
      */
     private void addStereotypes(Set<Annotation> annotations) {
-        Set<Annotation> stereotypeAnnotations = AnnotatedImpl.getMetaAnnotations(annotations, Stereotype.class);
+        Set<Annotation> stereotypeAnnotations = ClassUtils.getMetaAnnotations(annotations, Stereotype.class);
 
         for (Annotation stereotypeAnnotation : stereotypeAnnotations) {
             Class<? extends Annotation> stereotype = stereotypeAnnotation.annotationType();
