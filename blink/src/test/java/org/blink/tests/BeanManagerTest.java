@@ -13,13 +13,14 @@ import javax.enterprise.util.AnnotationLiteral;
 import junit.framework.Assert;
 
 import org.blink.beans.BlinkBean;
-import org.blink.beans.CreationalContextImpl;
 import org.blink.beans.decorators.DecoratedBean;
 import org.blink.beans.injection.BeanToInject;
 import org.blink.beans.injection.First;
 import org.blink.beans.injection.SampleBean;
 import org.blink.beans.injection.Second;
 import org.blink.beans.injection.SecondBeanToInject;
+import org.blink.beans.interceptors.TransactionHolder;
+import org.blink.beans.interceptors.TransactionalBean;
 import org.blink.beans.producer.Consumer;
 import org.blink.beans.producer.NonBean;
 import org.blink.beans.stereotypes.StereotypedBean;
@@ -105,7 +106,6 @@ public class BeanManagerTest {
     public void decoratorTest() {
 
         BeanManager manager = deployAndGetManager();
-        System.out.println(manager.toString());
 
         Set<Bean<?>> beans = manager.getBeans(DecoratedBean.class);
         List<Decorator> decorators = ((BlinkBean) beans.iterator().next()).getDecorators();
@@ -115,5 +115,14 @@ public class BeanManagerTest {
         DecoratedBean decoratedBean = (DecoratedBean) getBean(manager, "decoratedBean");
         decoratedBean.doSomething();
         Assert.assertEquals(2, decoratedBean.getCalls());
+    }
+
+    @Test
+    public void interceptorTest() {
+        TransactionalBean transactionalBean = (TransactionalBean) getBean("transactionalBean");
+        transactionalBean.executeInTransaction();
+
+        // expecting all 3 messages - start, in process, commited - to be in the log
+        Assert.assertEquals(3, TransactionHolder.getCurrentTrsanctionLog().size());
     }
 }

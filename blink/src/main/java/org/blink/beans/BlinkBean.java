@@ -20,9 +20,10 @@ public interface BlinkBean<T> extends Bean<T> {
     void initialize();
 
     /**
-     * called after all beans (incl. decorators) are initialized
+     * called after all beans (incl. decorators, interceptors) are initialized
+     * This method initializes the "augments" - decorators, interceptors, observers, etc.
      */
-    void initDecorators();
+    void initAugments();
 
     BlinkAnnotatedType<T> getAnnotatedType();
 

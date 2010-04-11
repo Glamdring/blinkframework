@@ -58,7 +58,7 @@ public class BeanDeployer {
                 ((BlinkBean) bean).initialize();
             }
             for (Bean<?> bean : beans) {
-                ((BlinkBean) bean).initDecorators();
+                ((BlinkBean) bean).initAugments();
             }
 
             return beanManager;

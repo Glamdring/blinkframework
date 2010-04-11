@@ -5,7 +5,7 @@ import javax.decorator.Delegate;
 import javax.inject.Inject;
 
 @Decorator
-public class DecoratorBean implements DecorationInterface {
+public class DecoratorTestBean implements DecorationInterface {
 
     @Inject @Delegate private DecoratedBean delegate;
 

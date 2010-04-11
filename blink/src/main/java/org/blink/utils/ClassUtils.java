@@ -32,6 +32,7 @@ import java.util.Set;
 
 import javax.decorator.Decorator;
 import javax.enterprise.inject.spi.InjectionPoint;
+import javax.interceptor.Interceptor;
 
 import org.apache.commons.lang.Validate;
 import org.blink.exceptions.BlinkException;
@@ -1748,5 +1749,9 @@ public final class ClassUtils {
     }
     public static boolean isDecorator(Class clazz) {
         return clazz.isAnnotationPresent(Decorator.class);
+    }
+
+    public static boolean isInterceptor(Class<?> clazz) {
+        return clazz.isAnnotationPresent(Interceptor.class);
     }
 }

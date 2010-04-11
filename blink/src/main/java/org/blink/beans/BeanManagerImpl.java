@@ -32,12 +32,13 @@ import org.blink.utils.ClassUtils;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public class BeanManagerImpl implements ConfigurableBeanManager {
 
     private Set<Bean<?>> beans;
-    private Set<Decorator<?>> decorators = Sets.newHashSet();
+    private List<Decorator<?>> decorators = Lists.newArrayList();
+    private List<Interceptor<?>> interceptors = Lists.newArrayList();
+
     private Map<Class<?>, AnnotatedType<?>> annotatedTypes = Maps.newHashMap();
 
     private Map<Contextual<?>, CreationalContext<?>> creationalContexts = Maps.newHashMap();
@@ -50,20 +51,38 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     public void initialize(Set<Bean<?>> beans) {
         this.beans = beans;
 
-        initializeAnnotatedTypes();
-        initializeDecorators();
+        initAnnotatedTypes();
+        initDecorators();
+        initInterceptors();
     }
 
-    private void initializeDecorators() {
+    private void initDecorators() {
         for (Bean<?> bean : beans) {
             if (bean instanceof Decorator) {
                 decorators.add((Decorator) bean);
             }
         }
+
+        Collections.sort(decorators, new Comparator<Decorator<?>>() {
+            @Override
+            public int compare(Decorator<?> d1, Decorator<?> d2) {
+                return ((DecoratorBean) d1).getIndex() - ((DecoratorBean) d2).getIndex();
+            }
+        });
     }
 
+    private void initInterceptors() {
+        for (Bean<?> bean : beans) {
+            if (bean instanceof Interceptor) {
+                interceptors.add((Interceptor) bean);
+            }
+        }
 
-    private void initializeAnnotatedTypes() {
+        Collections.sort(interceptors, new InterceptorComparator());
+
+    }
+
+    private void initAnnotatedTypes() {
         for (Bean<?> bean : beans) {
             annotatedTypes.put(bean.getBeanClass(), AnnotatedTypeImpl.create(bean.getBeanClass()));
         }
@@ -258,35 +277,37 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     public List<Decorator<?>> resolveDecorators(Set<Type> types,
             Annotation... qualifiers) {
 
-        List<Decorator<?>> decoratorsList = Lists.newArrayList();
+        List<Decorator<?>> subList = Lists.newArrayList();
 
         if (types == null || types.size() == 0) {
-            return decoratorsList;
+            return subList;
         }
 
         for (Decorator decorator : decorators) {
             if (decorator.getDelegateQualifiers().containsAll(Arrays.asList(qualifiers))
                     && decorator.getDecoratedTypes().containsAll(types)) {
-                decoratorsList.add(decorator);
+                subList.add(decorator);
             }
         }
 
-        Collections.sort(decoratorsList, new Comparator<Decorator<?>>() {
-            @Override
-            public int compare(Decorator<?> d1, Decorator<?> d2) {
-                return ((DecoratorBean) d1).getIndex() - ((DecoratorBean) d2).getIndex();
-            }
-        });
-
-        return decoratorsList;
+        return subList;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public List<Interceptor<?>> resolveInterceptors(
-            InterceptionType paramInterceptionType,
-            Annotation... paramArrayOfAnnotation) {
-        // TODO Auto-generated method stub
-        return null;
+            InterceptionType interceptionType,
+            Annotation... interceptorBindings) {
+
+        List<Interceptor<?>> subList = Lists.newArrayList();
+        for (Interceptor interceptor : interceptors) {
+            if (interceptor.intercepts(interceptionType) &&
+                    interceptor.getInterceptorBindings().containsAll(Arrays.asList(interceptorBindings))) {
+                subList.add(interceptor);
+            }
+        }
+
+        return subList;
     }
 
     @Override

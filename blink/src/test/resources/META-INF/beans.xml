@@ -3,6 +3,9 @@
     xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/beans_1_0.xsd">
 
     <decorators>
-        <class>org.blink.beans.decorators.DecoratorBean</class>
+        <class>org.blink.beans.decorators.DecoratorTestBean</class>
     </decorators>
+    <interceptors>
+        <class>org.blink.beans.interceptors.TransactionInterceptor</class>
+    </interceptors>
 </beans>
