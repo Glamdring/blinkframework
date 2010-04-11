@@ -1,16 +1,20 @@
 package org.blink.tests;
 
+import java.util.List;
 import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.Decorator;
 import javax.enterprise.util.AnnotationLiteral;
 
 import junit.framework.Assert;
 
+import org.blink.beans.BlinkBean;
 import org.blink.beans.CreationalContextImpl;
+import org.blink.beans.decorators.DecoratedBean;
 import org.blink.beans.injection.BeanToInject;
 import org.blink.beans.injection.First;
 import org.blink.beans.injection.SampleBean;
@@ -37,7 +41,7 @@ public class BeanManagerTest {
     @SuppressWarnings("unchecked")
     private Object getBean(BeanManager manager, String name) {
         Bean bean = manager.getBeans(name).iterator().next();
-        Object b = bean.create(new CreationalContextImpl<SampleBean>(bean));
+        Object b = bean.create(manager.createCreationalContext(bean));
         return b;
     }
 
@@ -94,5 +98,22 @@ public class BeanManagerTest {
         Bean<?> bean = beans.iterator().next();
         Assert.assertEquals("Incorrect scope", ApplicationScoped.class, bean.getScope());
         Assert.assertNull("Name must be null", bean.getName());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void decoratorTest() {
+
+        BeanManager manager = deployAndGetManager();
+        System.out.println(manager.toString());
+
+        Set<Bean<?>> beans = manager.getBeans(DecoratedBean.class);
+        List<Decorator> decorators = ((BlinkBean) beans.iterator().next()).getDecorators();
+
+        Assert.assertEquals(1, decorators.size());
+
+        DecoratedBean decoratedBean = (DecoratedBean) getBean(manager, "decoratedBean");
+        decoratedBean.doSomething();
+        Assert.assertEquals(2, decoratedBean.getCalls());
     }
 }

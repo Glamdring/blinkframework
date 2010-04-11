@@ -2,12 +2,17 @@ package org.blink.beans;
 
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javassist.util.proxy.MethodHandler;
+import javassist.util.proxy.ProxyFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.ConversationScoped;
@@ -20,16 +25,18 @@ import javax.enterprise.inject.Typed;
 import javax.enterprise.inject.spi.AnnotatedConstructor;
 import javax.enterprise.inject.spi.AnnotatedField;
 import javax.enterprise.inject.spi.AnnotatedMethod;
+import javax.enterprise.inject.spi.Decorator;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
+import javax.enterprise.inject.spi.Interceptor;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Qualifier;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.blink.core.AnyLiteral;
 import org.blink.core.DefaultLiteral;
 import org.blink.core.NewLiteral;
+import org.blink.exceptions.BlinkException;
 import org.blink.exceptions.DefinitionException;
 import org.blink.types.AnnotatedTypeImpl;
 import org.blink.types.BlinkAnnotatedType;
@@ -39,6 +46,7 @@ import org.blink.types.injectionpoints.InjectionPointImpl;
 import org.blink.utils.ClassUtils;
 import org.blink.utils.ReflectionUtils;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class BeanImpl<T> implements BlinkBean<T> {
@@ -66,15 +74,19 @@ public class BeanImpl<T> implements BlinkBean<T> {
     private String name;
 
     private Set<BlinkInjectionPoint<T>> injectionPoints = Sets.newHashSet();
-    private Set<BlinkInjectionPoint<T>> fieldInjectionPoints = Sets.newHashSet();
-    private Set<BlinkInjectionPoint<T>> initializerMethodInjectionPoints = Sets.newHashSet();
-
+    private Set<BlinkInjectionPoint<T>> fieldInjectionPoints = Sets
+            .newHashSet();
+    private Set<BlinkInjectionPoint<T>> initializerMethodInjectionPoints = Sets
+            .newHashSet();
 
     private InjectionTarget<T> injectionTarget;
 
     private ConfigurableBeanManager beanManager;
 
-    public BeanImpl(Class<T> clazz, ConfigurableBeanManager beanManager) {
+    private List<Interceptor<?>> interceptors = Lists.newArrayList();
+    private List<Decorator<?>> decorators = Lists.newArrayList();
+
+    BeanImpl(Class<T> clazz, ConfigurableBeanManager beanManager) {
         beanClass = clazz;
         this.beanManager = beanManager;
     }
@@ -109,9 +121,10 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
     private void initTypes() {
         if (getAnnotatedType().isAnnotationPresent(Typed.class)) {
-            this.types = getTypedTypes(ReflectionUtils.buildTypeMap(getAnnotatedType()
-                    .getTypeClosure()), getAnnotatedType().getJavaClass(),
-                    getAnnotatedType().getAnnotation(Typed.class));
+            this.types = getTypedTypes(ReflectionUtils
+                    .buildTypeMap(getAnnotatedType().getTypeClosure()),
+                    getAnnotatedType().getJavaClass(), getAnnotatedType()
+                            .getAnnotation(Typed.class));
         } else {
             this.types = new HashSet<Type>(getAnnotatedType().getTypeClosure());
             if (beanClass.isInterface()) {
@@ -120,12 +133,13 @@ public class BeanImpl<T> implements BlinkBean<T> {
         }
     }
 
-    private Set<Type> getTypedTypes(Map<Class<?>, Type> typeClosure, Class<?> rawType,
-            Typed typed) {
+    private Set<Type> getTypedTypes(Map<Class<?>, Type> typeClosure,
+            Class<?> rawType, Typed typed) {
         Set<Type> types = new HashSet<Type>();
         for (Class<?> specifiedClass : typed.value()) {
             if (!typeClosure.containsKey(specifiedClass)) {
-                throw new DefinitionException("Typed class not in hierarchy", null);
+                throw new DefinitionException("Typed class not in hierarchy",
+                        null);
             }
             types.add(typeClosure.get(specifiedClass));
         }
@@ -165,7 +179,8 @@ public class BeanImpl<T> implements BlinkBean<T> {
         for (AnnotatedConstructor<T> constructor : annotatedType
                 .getConstructors()) {
             if (constructor.isAnnotationPresent(Inject.class)) {
-                injectionPoints.add(InjectionPointImpl.create(constructor, this));
+                injectionPoints.add(InjectionPointImpl
+                        .create(constructor, this));
             }
         }
 
@@ -178,8 +193,10 @@ public class BeanImpl<T> implements BlinkBean<T> {
         }
         for (AnnotatedMethod<? super T> method : annotatedType.getMethods()) {
             if (method.isAnnotationPresent(Inject.class)
-                    && !ClassUtils.isStatic(method.getJavaMember().getModifiers())
-                    && !ClassUtils.isAbstract(method.getJavaMember().getModifiers())) {
+                    && !ClassUtils.isStatic(method.getJavaMember()
+                            .getModifiers())
+                    && !ClassUtils.isAbstract(method.getJavaMember()
+                            .getModifiers())) {
                 initializerMethodInjectionPoints
                         .add((BlinkInjectionPoint<T>) InjectionPointImpl
                                 .create(method, this));
@@ -236,12 +253,54 @@ public class BeanImpl<T> implements BlinkBean<T> {
         return !beanClass.isPrimitive();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public T create(CreationalContext<T> creationalContext) {
         T instance = getInjectionTarget().produce(creationalContext);
         getInjectionTarget().inject(instance, creationalContext);
         getInjectionTarget().postConstruct(instance);
+
+        for (Interceptor interceptor : interceptors) {
+
+        }
+
+        Class<?> originalClass = instance.getClass();
+        for (Decorator decorator : decorators) {
+            Object decoratorInstance = beanManager.getReference(decorator,
+                    decorator.getBeanClass(),
+                    ((CreationalContextImpl<?>) creationalContext).createChildContext(decorator));
+            instance = decorate(decoratorInstance, instance);
+        }
         return instance;
+    }
+
+    @SuppressWarnings("unchecked")
+    private T decorate(final Object decoratorInstance, final T instance) {
+        Class<?> originalClass = instance.getClass();
+        ProxyFactory factory = new ProxyFactory();
+        factory.setSuperclass(originalClass);
+
+        final Class<?> decoratorClass = decoratorInstance.getClass();
+        factory.setHandler(new MethodHandler() {
+            @Override
+            public Object invoke(Object self, Method method, Method proceed,
+                    Object[] args) throws Throwable {
+
+                try {
+                    Method decoratorMethod = decoratorClass.getMethod(method.getName(), method.getParameterTypes());
+                    return decoratorMethod.invoke(decoratorInstance, args);
+                } catch (NoSuchMethodException ex) {
+                    return method.invoke(instance, args);
+                }
+            }
+        });
+
+        Class<T> proxyClass = factory.createClass();
+        try {
+            return proxyClass.newInstance();
+        } catch (Exception ex) {
+            throw new BlinkException(ex);
+        }
     }
 
     @Override
@@ -283,19 +342,33 @@ public class BeanImpl<T> implements BlinkBean<T> {
         setInjectionTarget(new InjectionTargetImpl<T>(this));
     }
 
+    @SuppressWarnings("unchecked")
+    public void initDecorators() {
+        // Can't decorate a decorator
+        if (!ClassUtils.isDecorator(getBeanClass())) {
+            // passing no qualifiers for now. TODO
+            decorators = beanManager.resolveDecorators((Set) Sets
+                    .newHashSet(beanClass.getInterfaces()));
+        }
+    }
+
     private void initStereotypes() {
         addStereotypes(getBeanAnnotations());
     }
 
     /**
      * Recursively adding stereotypes
-     * @param all annotations
+     *
+     * @param all
+     *            annotations
      */
     private void addStereotypes(Set<Annotation> annotations) {
-        Set<Annotation> stereotypeAnnotations = ClassUtils.getMetaAnnotations(annotations, Stereotype.class);
+        Set<Annotation> stereotypeAnnotations = ClassUtils.getMetaAnnotations(
+                annotations, Stereotype.class);
 
         for (Annotation stereotypeAnnotation : stereotypeAnnotations) {
-            Class<? extends Annotation> stereotype = stereotypeAnnotation.annotationType();
+            Class<? extends Annotation> stereotype = stereotypeAnnotation
+                    .annotationType();
 
             stereotypes.add(stereotype);
             addStereotypes(Sets.newHashSet(stereotype.getAnnotations()));
@@ -303,19 +376,29 @@ public class BeanImpl<T> implements BlinkBean<T> {
     }
 
     private void initQualifiers() {
-        for (Annotation annotation: getBeanAnnotations()) {
-            if (annotation.annotationType().isAnnotationPresent(Qualifier.class)) {
+        qualifiers = getQualifiers(getBeanAnnotations());
+    }
+
+    protected Set<Annotation> getQualifiers(Set<Annotation> beanAnnotations) {
+        Set<Annotation> qualifiers = Sets.newHashSet();
+        for (Annotation annotation : beanAnnotations) {
+            if (annotation.annotationType()
+                    .isAnnotationPresent(Qualifier.class)) {
                 qualifiers.add(annotation);
             }
         }
 
-        if (qualifiers.size() == 0 || (qualifiers.size() == 1 && qualifiers.iterator().next().annotationType() == Named.class)) {
+        if (qualifiers.size() == 0
+                || (qualifiers.size() == 1 && qualifiers.iterator().next()
+                        .annotationType() == Named.class)) {
             qualifiers.add(DefaultLiteral.INSTANCE);
         }
 
         if (!qualifiers.contains(NewLiteral.INSTANCE)) {
             qualifiers.add(AnyLiteral.INSTANCE);
         }
+
+        return qualifiers;
     }
 
     protected Set<Annotation> getBeanAnnotations() {
@@ -337,8 +420,8 @@ public class BeanImpl<T> implements BlinkBean<T> {
             constructorInjectionPoint = ConstructorInjectionPoint.create(
                     initializerAnnotatedConstructors.iterator().next(), this);
         } else if (annotatedType.getNoArgsAnnotatedConstructor() != null) {
-            constructorInjectionPoint = ConstructorInjectionPoint.create(annotatedType
-                    .getNoArgsAnnotatedConstructor(), this);
+            constructorInjectionPoint = ConstructorInjectionPoint.create(
+                    annotatedType.getNoArgsAnnotatedConstructor(), this);
         }
 
         if (constructorInjectionPoint == null) {
@@ -363,5 +446,14 @@ public class BeanImpl<T> implements BlinkBean<T> {
     @Override
     public Set<BlinkInjectionPoint<T>> getInitializerMethodInjectionPoints() {
         return initializerMethodInjectionPoints;
+    }
+
+    public List<Decorator<?>> getDecorators() {
+        return decorators;
+    }
+
+    @Override
+    public String toString() {
+        return getName() + ":" + super.toString();
     }
 }

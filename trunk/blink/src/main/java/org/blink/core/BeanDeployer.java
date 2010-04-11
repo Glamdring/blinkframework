@@ -14,7 +14,8 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
 
-import org.blink.beans.BeanImpl;
+import org.blink.beans.BeanClassDescriptor;
+import org.blink.beans.BeanFactory;
 import org.blink.beans.BeanManagerImpl;
 import org.blink.beans.BeanScanner;
 import org.blink.beans.BlinkBean;
@@ -35,24 +36,30 @@ public class BeanDeployer {
 
     private boolean initialized;
 
-    @SuppressWarnings("unchecked")
     public BeanManager deployFromClassPath() {
         try {
             beanScanner = new ClasspathBeanScanner();
-            Set<Class<?>> classes = beanScanner.findBeans();
+            Set<BeanClassDescriptor> classes = beanScanner.findBeans();
 
             Set<Bean<?>> beans = new HashSet<Bean<?>>(classes.size());
 
-            beanManager = BeanManagerImpl.getInstance();
-            for (Class<?> clazz : classes) {
-                BlinkBean<?> bean = new BeanImpl(clazz, beanManager);
-                bean.initialize();
+            beanManager = new BeanManagerImpl();
+            for (BeanClassDescriptor descriptor : classes) {
+                BlinkBean<?> bean = BeanFactory.create(descriptor
+                        .getBeanClass(), beanManager, descriptor.getIndex());
                 beans.add(bean);
 
                 Set<Bean<?>> producerBeans = getProducerBeans(bean);
                 beans.addAll(producerBeans);
             }
             beanManager.initialize(beans);
+
+            for (Bean<?> bean : beans) {
+                ((BlinkBean) bean).initialize();
+            }
+            for (Bean<?> bean : beans) {
+                ((BlinkBean) bean).initDecorators();
+            }
 
             return beanManager;
 

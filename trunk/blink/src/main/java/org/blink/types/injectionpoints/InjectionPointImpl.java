@@ -23,6 +23,7 @@ import javax.inject.Qualifier;
 import org.apache.commons.lang.ArrayUtils;
 import org.blink.beans.BlinkBean;
 import org.blink.beans.ConfigurableBeanManager;
+import org.blink.beans.CreationalContextImpl;
 import org.blink.exceptions.BlinkException;
 import org.blink.exceptions.DefinitionException;
 import org.blink.utils.ClassUtils;
@@ -166,7 +167,7 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
 
     @Override
     public void inject(T instance, ConfigurableBeanManager manager,
-            CreationalContext<T> creationContext) {
+            CreationalContext<T> creationalContext) {
 
         Set<Annotation> qualifiers = getQualifiers();
         Set<Bean<?>> beans = manager.getBeans(getType(), qualifiers
@@ -179,8 +180,9 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
                     + " but found " + beans.size());
         }
         Bean<?> bean = beans.iterator().next();
-        Object objectToInject = manager.getReference(bean,
-                getType(), creationContext);
+        Object objectToInject = manager.getReference(bean, getType(),
+                ((CreationalContextImpl<?>) creationalContext)
+                        .createChildContext(bean));
         Field field = (Field) getMember();
         field.setAccessible(true);
         try {

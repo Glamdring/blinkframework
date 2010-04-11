@@ -4,5 +4,5 @@ import java.util.Set;
 
 public interface BeanScanner {
 
-    Set<Class<?>> findBeans();
+    Set<BeanClassDescriptor> findBeans();
 }

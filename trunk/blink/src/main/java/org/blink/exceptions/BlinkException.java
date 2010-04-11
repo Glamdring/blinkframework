@@ -10,6 +10,10 @@ public class BlinkException extends RuntimeException {
         super(message);
     }
 
+    public BlinkException(String message, Throwable t) {
+        super(message, t);
+    }
+
     public BlinkException() {
     }
 }

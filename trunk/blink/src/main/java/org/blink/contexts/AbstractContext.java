@@ -6,6 +6,7 @@ import javax.enterprise.context.ContextNotActiveException;
 import javax.enterprise.context.spi.Context;
 import javax.enterprise.context.spi.Contextual;
 import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.spi.Bean;
 
 import org.blink.beans.CreationalContextImpl;
 
@@ -16,15 +17,13 @@ public abstract class AbstractContext implements Context {
     protected abstract <T> T getContextualInstance(Contextual<T> contextual);
     protected abstract <T> void putContextualInstance(Contextual<T> contextual, T instance);
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T> T get(Contextual<T> contextual) {
         checkActive();
 
-        return (T) getContextualInstance(contextual);
+        return getContextualInstance(contextual);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T> T get(Contextual<T> contextual, CreationalContext<T> creationalContext) {
         checkActive();
@@ -42,6 +41,7 @@ public abstract class AbstractContext implements Context {
         if (creationalContext instanceof CreationalContextImpl) {
             T incomplete = ((CreationalContextImpl<T>) creationalContext)
                     .getIncompleteInstance(contextual);
+
             if (incomplete != null) {
                 return incomplete;
             }
