@@ -22,6 +22,7 @@ public class DecoratorBean<T> extends BeanImpl<T> implements Decorator<T> {
     private Annotated annotatedDelegate;
     private Set<Annotation> delegateQualifiers;
     private int index;
+    private Set<Type> decoratedTypes;
 
     DecoratorBean(Class<T> clazz, ConfigurableBeanManager beanManager, int index) {
         super(clazz, beanManager);
@@ -54,16 +55,22 @@ public class DecoratorBean<T> extends BeanImpl<T> implements Decorator<T> {
             throw new DefinitionException("No delegate injection point for bean " + getBeanClass());
         }
         initDelegateQualifiers();
+        initDecoratedTypes();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void initDecoratedTypes() {
+        decoratedTypes = (Set) Sets.newHashSet(getBeanClass().getInterfaces());
+        decoratedTypes.addAll(annotatedDelegate.getTypeClosure());
     }
 
     private void initDelegateQualifiers() {
         delegateQualifiers = getQualifiers(annotatedDelegate.getAnnotations());
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Set<Type> getDecoratedTypes() {
-        return (Set) Sets.newHashSet(getBeanClass().getInterfaces());
+        return decoratedTypes;
     }
 
     @Override

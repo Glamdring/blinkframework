@@ -4,6 +4,7 @@
 
     <decorators>
         <class>org.blink.beans.decorators.DecoratorTestBean</class>
+        <class>org.blink.beans.interceptors.DecoratorOfInterceptedBean</class>
     </decorators>
     <interceptors>
         <class>org.blink.beans.interceptors.TransactionInterceptor</class>

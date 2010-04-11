@@ -19,6 +19,7 @@ import org.blink.beans.injection.First;
 import org.blink.beans.injection.SampleBean;
 import org.blink.beans.injection.Second;
 import org.blink.beans.injection.SecondBeanToInject;
+import org.blink.beans.interceptors.DecoratedTransactionalBean;
 import org.blink.beans.interceptors.TransactionHolder;
 import org.blink.beans.interceptors.TransactionalBean;
 import org.blink.beans.producer.Consumer;
@@ -124,5 +125,20 @@ public class BeanManagerTest {
 
         // expecting all 3 messages - start, in process, commited - to be in the log
         Assert.assertEquals(3, TransactionHolder.getCurrentTrsanctionLog().size());
+        TransactionHolder.getCurrentTrsanctionLog().clear();
+    }
+
+    @Test
+    public void combinedInterceptorAndDelegateTest() {
+        DecoratedTransactionalBean transactionalBean = (DecoratedTransactionalBean) getBean("decoratedTransactionalBean");
+        transactionalBean.doSomething();
+
+        // expecting all 4 messages - start, decorated, in process, commited - to be in the log
+        Assert.assertEquals(4, TransactionHolder.getCurrentTrsanctionLog().size());
+
+        List<String> msgs = TransactionHolder.getCurrentTrsanctionLog();
+        Assert.assertEquals("Decorator message on incorrect position", "Transaction decorated", msgs.get(1));
+
+        TransactionHolder.getCurrentTrsanctionLog().clear();
     }
 }
