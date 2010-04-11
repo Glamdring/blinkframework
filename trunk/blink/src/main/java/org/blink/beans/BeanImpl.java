@@ -4,7 +4,9 @@ import java.beans.Introspector;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,6 +15,7 @@ import java.util.logging.Logger;
 
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
+import javassist.util.proxy.ProxyObject;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.ConversationScoped;
@@ -28,10 +31,13 @@ import javax.enterprise.inject.spi.AnnotatedMethod;
 import javax.enterprise.inject.spi.Decorator;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
+import javax.enterprise.inject.spi.InterceptionType;
 import javax.enterprise.inject.spi.Interceptor;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Qualifier;
+import javax.interceptor.InterceptorBinding;
+import javax.interceptor.InvocationContext;
 
 import org.blink.core.AnyLiteral;
 import org.blink.core.DefaultLiteral;
@@ -47,6 +53,7 @@ import org.blink.utils.ClassUtils;
 import org.blink.utils.ReflectionUtils;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class BeanImpl<T> implements BlinkBean<T> {
@@ -84,9 +91,16 @@ public class BeanImpl<T> implements BlinkBean<T> {
     private ConfigurableBeanManager beanManager;
 
     private List<Interceptor<?>> interceptors = Lists.newArrayList();
+    private Set<Annotation> interceptorBindings = Sets.newHashSet();
+
+    private Map<Method, List<Interceptor<?>>> methodInterceptors = Maps
+            .newHashMap();
+    private Map<AnnotatedMethod, Set<Annotation>> methodInterceptorBindings = Maps
+            .newHashMap();
+
     private List<Decorator<?>> decorators = Lists.newArrayList();
 
-    BeanImpl(Class<T> clazz, ConfigurableBeanManager beanManager) {
+    protected BeanImpl(Class<T> clazz, ConfigurableBeanManager beanManager) {
         beanClass = clazz;
         this.beanManager = beanManager;
     }
@@ -253,25 +267,73 @@ public class BeanImpl<T> implements BlinkBean<T> {
         return !beanClass.isPrimitive();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public T create(CreationalContext<T> creationalContext) {
         T instance = getInjectionTarget().produce(creationalContext);
         getInjectionTarget().inject(instance, creationalContext);
         getInjectionTarget().postConstruct(instance);
 
-        for (Interceptor interceptor : interceptors) {
-
-        }
-
-        Class<?> originalClass = instance.getClass();
         for (Decorator decorator : decorators) {
             Object decoratorInstance = beanManager.getReference(decorator,
                     decorator.getBeanClass(),
-                    ((CreationalContextImpl<?>) creationalContext).createChildContext(decorator));
+                    ((CreationalContextImpl<?>) creationalContext)
+                            .createChildContext(decorator));
             instance = decorate(decoratorInstance, instance);
         }
+
+        if (needsInterceptorProxy()) {
+            instance = createInterceptorProxy(instance, creationalContext);
+        }
+
         return instance;
+    }
+
+    private T createInterceptorProxy(final T instance,
+            final CreationalContext cctx) {
+        Class<?> originalClass = instance.getClass();
+        ProxyFactory factory = new ProxyFactory();
+        factory.setSuperclass(originalClass);
+
+        factory.setHandler(new MethodHandler() {
+            @SuppressWarnings("unchecked")
+            @Override
+            public Object invoke(Object self, Method method, Method proceed,
+                    Object[] args) throws Throwable {
+
+                InvocationContext ctx = null;
+                if (!needsMethodInterceptors()
+                        || !methodInterceptors.containsKey(method)) {
+                    ctx = createInvocationContext(method, args,
+                            ((List) interceptors).iterator());
+                } else {
+                    ctx = createInvocationContext(method, args,
+                            ((List) methodInterceptors.get(method)).iterator());
+                }
+
+                return ctx.proceed();
+            }
+
+            private InvocationContext createInvocationContext(Method method,
+                    Object[] args, Iterator<Interceptor> chain) {
+                InvocationContextImpl ctx = new InvocationContextImpl();
+                ctx.setMethod(method);
+                ctx.setTarget(instance);
+                ctx.setParameters(args);
+                ctx.setBeanManager(beanManager);
+                ctx.setCreationalContext(cctx);
+                // give up.. using the raw type
+                ctx.setInterceptorChain(chain);
+
+                return ctx;
+            }
+        });
+
+        Class<T> proxyClass = factory.createClass();
+        try {
+            return proxyClass.newInstance();
+        } catch (Exception ex) {
+            throw new BlinkException(ex);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -287,7 +349,8 @@ public class BeanImpl<T> implements BlinkBean<T> {
                     Object[] args) throws Throwable {
 
                 try {
-                    Method decoratorMethod = decoratorClass.getMethod(method.getName(), method.getParameterTypes());
+                    Method decoratorMethod = decoratorClass.getMethod(method
+                            .getName(), method.getParameterTypes());
                     return decoratorMethod.invoke(decoratorInstance, args);
                 } catch (NoSuchMethodException ex) {
                     return method.invoke(instance, args);
@@ -340,16 +403,76 @@ public class BeanImpl<T> implements BlinkBean<T> {
         initAlternative();
         initInjectionPoints();
         setInjectionTarget(new InjectionTargetImpl<T>(this));
+        initInterceptorBindings();
+    }
+
+    public void initAugments() {
+        initInterceptors();
+        initDecorators();
+    }
+
+    private void initInterceptorBindings() {
+        interceptorBindings = ClassUtils.getMetaAnnotations(
+                getBeanAnnotations(), InterceptorBinding.class);
+        for (AnnotatedMethod method : getAnnotatedType().getMethods()) {
+            methodInterceptorBindings.put(method, ClassUtils
+                    .getMetaAnnotations(method.getAnnotations(),
+                            InterceptorBinding.class));
+        }
     }
 
     @SuppressWarnings("unchecked")
-    public void initDecorators() {
-        // Can't decorate a decorator
-        if (!ClassUtils.isDecorator(getBeanClass())) {
-            // passing no qualifiers for now. TODO
-            decorators = beanManager.resolveDecorators((Set) Sets
-                    .newHashSet(beanClass.getInterfaces()));
+    protected void initDecorators() {
+        // Should decorators be able to decorate other decorators?
+
+        // passing no qualifiers for now. TODO
+        decorators = beanManager.resolveDecorators((Set) Sets
+                .newHashSet(beanClass.getInterfaces()));
+
+        // reversing, because adding a decorator first means executing it last
+        Collections.reverse(decorators);
+    }
+
+    protected void initInterceptors() {
+        // Interceptors can't intercept other interceptors
+        if (!ClassUtils.isInterceptor(beanClass)) {
+            interceptors = getInterceptors(interceptorBindings);
+            for (AnnotatedMethod method : methodInterceptorBindings.keySet()) {
+                List<Interceptor<?>> tempList = getInterceptors(methodInterceptorBindings
+                        .get(method));
+
+                // adding the ones inherited from the class-level
+                for (Interceptor<?> interceptor : interceptors) {
+                    if (!tempList.contains(interceptor)) {
+                        tempList.add(interceptor);
+                    }
+                }
+                Collections.sort(tempList, new InterceptorComparator());
+                methodInterceptors.put(method.getJavaMember(), tempList);
+            }
         }
+    }
+
+    private List<Interceptor<?>> getInterceptors(
+            Set<Annotation> interceptorBindings) {
+        List<Interceptor<?>> interceptors = Lists.newArrayList();
+
+        if (interceptorBindings.size() > 0) {
+            for (InterceptionType type : InterceptionType.values()) {
+                List<Interceptor<?>> tempList = beanManager
+                        .resolveInterceptors(type, interceptorBindings
+                                .toArray(new Annotation[interceptorBindings
+                                        .size()]));
+
+                interceptors.addAll(tempList);
+            }
+
+            // reversing, because adding an interceptor first means executing it
+            // last
+            Collections.reverse(interceptors);
+        }
+
+        return interceptors;
     }
 
     private void initStereotypes() {
@@ -455,5 +578,33 @@ public class BeanImpl<T> implements BlinkBean<T> {
     @Override
     public String toString() {
         return getName() + ":" + super.toString();
+    }
+
+    public Set<Annotation> getInterceptorBindings() {
+        return interceptorBindings;
+    }
+
+    protected boolean needsInterceptorProxy() {
+        if (interceptors.size() > 0) {
+            return true;
+        }
+
+        for (List<Interceptor<?>> interceptors : methodInterceptors.values()) {
+            if (interceptors.size() > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected boolean needsMethodInterceptors() {
+        for (List<Interceptor<?>> interceptors : methodInterceptors.values()) {
+            if (interceptors.size() > 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

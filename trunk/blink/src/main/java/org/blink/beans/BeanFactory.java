@@ -8,6 +8,8 @@ public class BeanFactory {
             ConfigurableBeanManager beanManager, int index) {
         if (ClassUtils.isDecorator(clazz)) {
             return new DecoratorBean<T>(clazz, beanManager, index);
+        } else if (ClassUtils.isInterceptor(clazz)) {
+        	return new InterceptorBean<T>(clazz, beanManager, index);
         } else {
             return new BeanImpl<T>(clazz, beanManager);
         }
