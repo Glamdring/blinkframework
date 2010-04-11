@@ -24,6 +24,7 @@ import org.blink.beans.ConfigurableBeanManager;
 import org.blink.beans.ProducerFieldBean;
 import org.blink.beans.ProducerMethodBean;
 import org.blink.contexts.ApplicationContext;
+import org.blink.contexts.DependentContext;
 import org.blink.contexts.RequestContext;
 import org.blink.exceptions.ContextInitializationException;
 
@@ -117,6 +118,7 @@ public class BeanDeployer {
     private void addContexts() {
         beanManager.addContext(new ApplicationContext());
         beanManager.addContext(new RequestContext());
+        beanManager.addContext(new DependentContext());
         // TODO more contexts
     }
 

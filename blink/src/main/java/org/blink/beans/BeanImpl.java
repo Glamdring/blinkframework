@@ -20,6 +20,7 @@ import javassist.util.proxy.ProxyObject;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.ConversationScoped;
+import javax.enterprise.context.Dependent;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.context.spi.CreationalContext;
@@ -70,6 +71,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
         SCOPES.add(SessionScoped.class);
         SCOPES.add(RequestScoped.class);
         SCOPES.add(ConversationScoped.class);
+        SCOPES.add(Dependent.class);
     }
 
     private Class<T> beanClass;
@@ -398,6 +400,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
         try {
             getInjectionTarget().preDestroy(instance);
             getInjectionTarget().dispose(instance);
+            creationalContext.release();
         } catch (Exception ex) {
             logger.log(Level.WARNING, "Exception in destryoing instance of "
                     + getName(), ex);
