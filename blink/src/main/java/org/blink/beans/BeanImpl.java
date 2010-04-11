@@ -2,6 +2,7 @@ package org.blink.beans;
 
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -291,7 +292,25 @@ public class BeanImpl<T> implements BlinkBean<T> {
     private T createInterceptorProxy(final T instance,
             final CreationalContext cctx) {
         Class<?> originalClass = instance.getClass();
+
+        //TODO a better method to create proxies of proxies
+
+        MethodHandler originalMethodHandler = null;
+        if (instance instanceof ProxyObject) {
+            originalClass = originalClass.getSuperclass();
+            try {
+                Field field = originalClass.getField(name);
+                field.setAccessible(true);
+                originalMethodHandler = (MethodHandler) field.get(instance);
+            } catch (Exception ex) {
+                // do nothing
+            }
+        }
+
+        final MethodHandler finalOriginalMethodHandler = originalMethodHandler;
+
         ProxyFactory factory = new ProxyFactory();
+
         factory.setSuperclass(originalClass);
 
         factory.setHandler(new MethodHandler() {
@@ -310,7 +329,15 @@ public class BeanImpl<T> implements BlinkBean<T> {
                             ((List) methodInterceptors.get(method)).iterator());
                 }
 
-                return ctx.proceed();
+                Object result = ctx.proceed();
+
+                // ignore the result of the interceptors, if there is a decorator ??
+
+                if (finalOriginalMethodHandler != null) {
+                    return finalOriginalMethodHandler.invoke(self, method, proceed, args);
+                } else {
+                    return result;
+                }
             }
 
             private InvocationContext createInvocationContext(Method method,
@@ -426,8 +453,9 @@ public class BeanImpl<T> implements BlinkBean<T> {
         // Should decorators be able to decorate other decorators?
 
         // passing no qualifiers for now. TODO
-        decorators = beanManager.resolveDecorators((Set) Sets
-                .newHashSet(beanClass.getInterfaces()));
+        Set classes = (Set) Sets.newHashSet(beanClass.getInterfaces());
+        classes.add(beanClass);
+        decorators = beanManager.resolveDecorators(classes);
 
         // reversing, because adding a decorator first means executing it last
         Collections.reverse(decorators);
