@@ -1,56 +1,46 @@
 package org.blink.beans;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.enterprise.context.spi.Contextual;
 import javax.enterprise.context.spi.CreationalContext;
 
 public class CreationalContextImpl<T> implements CreationalContext<T>, Serializable {
 
-    private final transient Map<Contextual<?>, Object> incompleteInstances;
+    private transient T incompleteInstance;
     private final transient Contextual<T> contextual;
 
-    public CreationalContextImpl(Contextual<T> contextual) {
-        this(contextual, new HashMap<Contextual<?>, Object>());
-    }
+    private transient CreationalContextImpl<?> parent;
 
-    private CreationalContextImpl(Contextual<T> contextual,
-            Map<Contextual<?>, Object> incompleteInstances) {
-        this.incompleteInstances = incompleteInstances;
+    public CreationalContextImpl(Contextual<T> contextual) {
         this.contextual = contextual;
+    }
+    public CreationalContextImpl(Contextual<T> contextual, CreationalContextImpl<?> parent) {
+        this.contextual = contextual;
+        this.parent = parent;
     }
 
     public void push(T incompleteInstance) {
-        incompleteInstances.put(contextual, incompleteInstance);
-    }
-
-    public <X> CreationalContextImpl<X> getCreationalContext(
-            Contextual<X> contextual) {
-        return new CreationalContextImpl<X>(
-                contextual,
-                incompleteInstances == null ? new HashMap<Contextual<?>, Object>()
-                        : new HashMap<Contextual<?>, Object>(
-                                incompleteInstances)); // ,dependentInstancesStore
+        this.incompleteInstance = incompleteInstance;
     }
 
     @SuppressWarnings("unchecked")
-    public <S> S getIncompleteInstance(Contextual<S> bean) {
-        return incompleteInstances == null ? null : (S) incompleteInstances
-                .get(bean);
+    public CreationalContextImpl<?> createChildContext(Contextual<?> contextual) {
+        return new CreationalContextImpl(contextual, this);
     }
 
-    public boolean containsIncompleteInstance(Contextual<?> bean) {
-        return incompleteInstances == null ? false : incompleteInstances
-                .containsKey(bean);
-    }
-
-    public void release() {
-        // dependentInstancesStore.destroyDependentInstances();
-        if (incompleteInstances != null) {
-            incompleteInstances.clear();
+    @SuppressWarnings("unchecked")
+    public T getIncompleteInstance(Contextual<?> contextual) {
+        if (this.contextual == contextual && incompleteInstance != null) {
+            return incompleteInstance;
+        } else if (parent != null){
+            return (T) parent.getIncompleteInstance(contextual);
+        } else {
+            return null;
         }
     }
 
+    public void release() {
+        incompleteInstance = null;
+    }
 }

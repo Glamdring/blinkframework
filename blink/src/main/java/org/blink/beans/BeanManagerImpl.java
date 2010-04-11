@@ -3,6 +3,8 @@ package org.blink.beans;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,16 +30,19 @@ import org.apache.commons.lang.ArrayUtils;
 import org.blink.types.AnnotatedTypeImpl;
 import org.blink.utils.ClassUtils;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class BeanManagerImpl implements ConfigurableBeanManager {
 
-    private static ConfigurableBeanManager instance;
-
     private Set<Bean<?>> beans;
+    private Set<Decorator<?>> decorators = Sets.newHashSet();
     private Map<Class<?>, AnnotatedType<?>> annotatedTypes = Maps.newHashMap();
 
-    private BeanManagerImpl() {
+    private Map<Contextual<?>, CreationalContext<?>> creationalContexts = Maps.newHashMap();
+
+    public BeanManagerImpl() {
 
     }
 
@@ -46,15 +51,17 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         this.beans = beans;
 
         initializeAnnotatedTypes();
+        initializeDecorators();
     }
 
-    public static synchronized ConfigurableBeanManager getInstance() {
-        if (instance == null) {
-            instance = new BeanManagerImpl();
+    private void initializeDecorators() {
+        for (Bean<?> bean : beans) {
+            if (bean instanceof Decorator) {
+                decorators.add((Decorator) bean);
+            }
         }
-
-        return instance;
     }
+
 
     private void initializeAnnotatedTypes() {
         for (Bean<?> bean : beans) {
@@ -83,10 +90,17 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         return annotatedType;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> CreationalContext<T> createCreationalContext(
             Contextual<T> contextual) {
-        return new CreationalContextImpl<T>(contextual);
+        //TODO consider whether caching creationalcontexts is a good idea
+        CreationalContext<T> ctx = (CreationalContext<T>) creationalContexts.get(contextual);
+        if (ctx == null) {
+            ctx = new CreationalContextImpl<T>(contextual);
+        }
+
+        return ctx;
     }
 
     @SuppressWarnings("unchecked")
@@ -239,11 +253,32 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public List<Decorator<?>> resolveDecorators(Set<Type> paramSet,
-            Annotation... paramArrayOfAnnotation) {
-        // TODO Auto-generated method stub
-        return null;
+    public List<Decorator<?>> resolveDecorators(Set<Type> types,
+            Annotation... qualifiers) {
+
+        List<Decorator<?>> decoratorsList = Lists.newArrayList();
+
+        if (types == null || types.size() == 0) {
+            return decoratorsList;
+        }
+
+        for (Decorator decorator : decorators) {
+            if (decorator.getDelegateQualifiers().containsAll(Arrays.asList(qualifiers))
+                    && decorator.getDecoratedTypes().containsAll(types)) {
+                decoratorsList.add(decorator);
+            }
+        }
+
+        Collections.sort(decoratorsList, new Comparator<Decorator<?>>() {
+            @Override
+            public int compare(Decorator<?> d1, Decorator<?> d2) {
+                return ((DecoratorBean) d1).getIndex() - ((DecoratorBean) d2).getIndex();
+            }
+        });
+
+        return decoratorsList;
     }
 
     @Override
