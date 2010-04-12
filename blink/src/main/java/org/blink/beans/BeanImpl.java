@@ -295,21 +295,9 @@ public class BeanImpl<T> implements BlinkBean<T> {
             final CreationalContext cctx) {
         Class<?> originalClass = instance.getClass();
 
-        //TODO a better method to create proxies of proxies
-
-        MethodHandler originalMethodHandler = null;
         if (instance instanceof ProxyObject) {
             originalClass = originalClass.getSuperclass();
-            try {
-                Field field = originalClass.getField(name);
-                field.setAccessible(true);
-                originalMethodHandler = (MethodHandler) field.get(instance);
-            } catch (Exception ex) {
-                // do nothing
-            }
         }
-
-        final MethodHandler finalOriginalMethodHandler = originalMethodHandler;
 
         ProxyFactory factory = new ProxyFactory();
 
@@ -331,15 +319,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
                             ((List) methodInterceptors.get(method)).iterator());
                 }
 
-                Object result = ctx.proceed();
-
-                // ignore the result of the interceptors, if there is a decorator ??
-
-                if (finalOriginalMethodHandler != null) {
-                    return finalOriginalMethodHandler.invoke(self, method, proceed, args);
-                } else {
-                    return result;
-                }
+                return ctx.proceed();
             }
 
             private InvocationContext createInvocationContext(Method method,
@@ -368,6 +348,10 @@ public class BeanImpl<T> implements BlinkBean<T> {
     @SuppressWarnings("unchecked")
     private T decorate(final Object decoratorInstance, final T instance) {
         Class<?> originalClass = instance.getClass();
+        if (instance instanceof ProxyObject) {
+            originalClass = originalClass.getSuperclass();
+        }
+
         ProxyFactory factory = new ProxyFactory();
         factory.setSuperclass(originalClass);
 
