@@ -206,8 +206,7 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
 
     @Override
     public ELResolver getELResolver() {
-        // TODO Auto-generated method stub
-        return null;
+        return new BlinkELResolver(this);
     }
 
     @Override
