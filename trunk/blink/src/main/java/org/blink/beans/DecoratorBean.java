@@ -13,6 +13,7 @@ import javax.enterprise.inject.spi.InjectionPoint;
 
 import org.blink.exceptions.DefinitionException;
 import org.blink.types.injectionpoints.BlinkInjectionPoint;
+import org.blink.utils.ClassUtils;
 
 import com.google.common.collect.Sets;
 
@@ -65,7 +66,7 @@ public class DecoratorBean<T> extends BeanImpl<T> implements Decorator<T> {
     }
 
     private void initDelegateQualifiers() {
-        delegateQualifiers = getQualifiers(annotatedDelegate.getAnnotations());
+        delegateQualifiers = ClassUtils.getQualifiers(annotatedDelegate.getAnnotations());
     }
 
     @Override

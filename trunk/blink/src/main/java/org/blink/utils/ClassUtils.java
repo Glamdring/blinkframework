@@ -32,9 +32,14 @@ import java.util.Set;
 
 import javax.decorator.Decorator;
 import javax.enterprise.inject.spi.InjectionPoint;
+import javax.inject.Named;
+import javax.inject.Qualifier;
 import javax.interceptor.Interceptor;
 
 import org.apache.commons.lang.Validate;
+import org.blink.core.AnyLiteral;
+import org.blink.core.DefaultLiteral;
+import org.blink.core.NewLiteral;
 import org.blink.exceptions.BlinkException;
 
 import com.google.common.collect.Sets;
@@ -1753,5 +1758,27 @@ public final class ClassUtils {
 
     public static boolean isInterceptor(Class<?> clazz) {
         return clazz.isAnnotationPresent(Interceptor.class);
+    }
+
+    public static Set<Annotation> getQualifiers(Set<Annotation> annotations) {
+        Set<Annotation> qualifiers = Sets.newHashSet();
+        for (Annotation annotation : annotations) {
+            if (annotation.annotationType()
+                    .isAnnotationPresent(Qualifier.class)) {
+                qualifiers.add(annotation);
+            }
+        }
+
+        if (qualifiers.size() == 0
+                || (qualifiers.size() == 1 && qualifiers.iterator().next()
+                        .annotationType() == Named.class)) {
+            qualifiers.add(DefaultLiteral.INSTANCE);
+        }
+
+        if (!qualifiers.contains(NewLiteral.INSTANCE)) {
+            qualifiers.add(AnyLiteral.INSTANCE);
+        }
+
+        return qualifiers;
     }
 }

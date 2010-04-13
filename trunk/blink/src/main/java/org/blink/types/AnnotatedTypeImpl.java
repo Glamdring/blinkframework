@@ -41,7 +41,8 @@ public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements
         Constructor<T>[] constructors = (Constructor<T>[]) clazz
                 .getDeclaredConstructors();
         for (Constructor<T> constructor : constructors) {
-            if (constructor.getAnnotations().length > 0) {
+            if (constructor.getAnnotations().length > 0
+                    || hasParameterAnnotations(constructor.getParameterAnnotations())) {
                 annotatedConstructors.add(new AnnotatedConstructorImpl<T>(this,
                         constructor));
             }
@@ -56,7 +57,8 @@ public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements
 
         Method[] methods = clazz.getDeclaredMethods();
         for (Method method : methods) {
-            if (method.getAnnotations().length > 0) {
+            if (method.getAnnotations().length > 0
+                    || hasParameterAnnotations(method.getParameterAnnotations())) {
                 annotatedMethods.add(new AnnotatedMethodImpl<T>(this, method));
             }
         }
@@ -64,6 +66,15 @@ public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements
         setAnnotations(clazz.getAnnotations());
 
         initNoArgContructor();
+    }
+
+    private boolean hasParameterAnnotations(Annotation[][] parameterAnnotations) {
+        for (Annotation[] annotations : parameterAnnotations) {
+            if (annotations.length > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @SuppressWarnings("unchecked")

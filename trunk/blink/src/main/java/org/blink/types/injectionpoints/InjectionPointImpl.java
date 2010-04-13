@@ -13,7 +13,7 @@ import java.util.Set;
 
 import javax.decorator.Delegate;
 import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.Any;
+import javax.enterprise.event.Event;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.AnnotatedCallable;
@@ -26,6 +26,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.blink.beans.BlinkBean;
 import org.blink.beans.ConfigurableBeanManager;
 import org.blink.beans.CreationalContextImpl;
+import org.blink.beans.EventImpl;
 import org.blink.beans.InstanceImpl;
 import org.blink.exceptions.BlinkException;
 import org.blink.exceptions.DefinitionException;
@@ -182,6 +183,10 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
             //TODO by spec this should be a bean.
             Instance<T> instanceHolder = new InstanceImpl<T>(manager, this);
             objectToInject = instanceHolder;
+        } else if (getType() == Event.class) {
+            //TODO by spec this should be a bean.
+            Event<T> event = new EventImpl(manager, this);
+            objectToInject = event;
         } else {
             Set<Bean<?>> beans = manager.getBeans(getType(), qualifiers
                     .toArray(new Annotation[qualifiers.size()]));
