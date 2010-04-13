@@ -15,7 +15,10 @@ public class BlinkWebELResolver extends BlinkELResolver {
         super(beanManager);
     }
 
+    @Override
     public ConfigurableBeanManager getBeanManager() {
+        // TODO check if JSF is on classpath, otherwise use a thread-local
+        // instance of ServletContext, set by a RequestListener
         return new FacesBeanManagerProvider().getBeanManager();
     }
 
@@ -25,7 +28,8 @@ public class BlinkWebELResolver extends BlinkELResolver {
     private static class FacesBeanManagerProvider {
         public ConfigurableBeanManager getBeanManager() {
             FacesContext facesContext = FacesContext.getCurrentInstance();
-            return null;
+            return (ConfigurableBeanManager) facesContext.getExternalContext()
+                    .getApplicationMap().get(StartupListener.BEAN_MANAGER_KEY);
         }
     }
 

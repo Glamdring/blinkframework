@@ -373,4 +373,9 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         return sb.toString();
     }
 
+    @Override
+    public void destroy() {
+        // TODO Add destruction logic
+    }
+
 }
