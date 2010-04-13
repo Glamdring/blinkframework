@@ -2,6 +2,7 @@ package org.blink.contexts;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -28,5 +29,11 @@ public class ApplicationContext extends AbstractContext {
     @Override
     protected <T> void putContextualInstance(Contextual<T> contextual, T instance) {
         contextualInstances.put(contextual, instance);
+    }
+
+
+    @Override
+    protected Map<Contextual<?>, Object> getContextualInstances() {
+        return contextualInstances;
     }
 }

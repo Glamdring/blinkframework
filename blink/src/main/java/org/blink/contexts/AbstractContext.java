@@ -1,12 +1,12 @@
 package org.blink.contexts;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.enterprise.context.ContextNotActiveException;
 import javax.enterprise.context.spi.Context;
 import javax.enterprise.context.spi.Contextual;
 import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.spi.Bean;
 
 import org.blink.beans.CreationalContextImpl;
 
@@ -67,4 +67,13 @@ public abstract class AbstractContext implements Context {
                     + getScope().getName() + " is not active");
         }
     }
+
+    @SuppressWarnings("unchecked")
+    public void destroy() {
+        for (Contextual contextual : getContextualInstances().keySet()) {
+            contextual.destroy(getContextualInstances().get(contextual), null); // TODO get a creationalContext from bean manager
+        }
+    }
+
+    protected abstract Map<Contextual<?>, Object> getContextualInstances();
 }
