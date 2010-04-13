@@ -16,6 +16,10 @@ import javax.el.ExpressionFactory;
 import javax.enterprise.context.spi.Context;
 import javax.enterprise.context.spi.Contextual;
 import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Stereotype;
+import javax.enterprise.inject.spi.AnnotatedMethod;
+import javax.enterprise.inject.spi.AnnotatedParameter;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.Decorator;
@@ -25,13 +29,16 @@ import javax.enterprise.inject.spi.InterceptionType;
 import javax.enterprise.inject.spi.Interceptor;
 import javax.enterprise.inject.spi.ObserverMethod;
 import javax.inject.Qualifier;
+import javax.interceptor.InterceptorBinding;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.blink.types.AnnotatedTypeImpl;
+import org.blink.types.BlinkAnnotatedType;
 import org.blink.utils.ClassUtils;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class BeanManagerImpl implements ConfigurableBeanManager {
 
@@ -56,6 +63,7 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         initInterceptors();
     }
 
+    @SuppressWarnings("unchecked")
     private void initDecorators() {
         for (Bean<?> bean : beans) {
             if (bean instanceof Decorator) {
@@ -71,6 +79,7 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         });
     }
 
+    @SuppressWarnings("unchecked")
     private void initInterceptors() {
         for (Bean<?> bean : beans) {
             if (bean instanceof Interceptor) {
@@ -141,9 +150,13 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     }
 
     @Override
-    public void fireEvent(Object paramObject,
-            Annotation... paramArrayOfAnnotation) {
-        // TODO Auto-generated method stub
+    public void fireEvent(Object event,
+            Annotation... qualifiers) {
+
+        Set<ObserverMethod<? super Object>> observerMethods = resolveObserverMethods(event, qualifiers);
+        for (ObserverMethod<? super Object> observerMethod : observerMethods) {
+            observerMethod.notify(event);
+        }
 
     }
 
@@ -205,9 +218,8 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
 
     @Override
     public Set<Annotation> getInterceptorBindingDefinition(
-            Class<? extends Annotation> paramClass) {
-        // TODO Auto-generated method stub
-        return null;
+            Class<? extends Annotation> clazz) {
+        return ClassUtils.getMetaAnnotations(Sets.newHashSet(clazz.getAnnotations()), InterceptorBinding.class);
     }
 
     @Override
@@ -225,21 +237,19 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
 
     @Override
     public Set<Annotation> getStereotypeDefinition(
-            Class<? extends Annotation> paramClass) {
-        // TODO Auto-generated method stub
-        return null;
+            Class<? extends Annotation> clazz) {
+        return ClassUtils.getMetaAnnotations(Sets.newHashSet(clazz.getAnnotations()), Stereotype.class);
     }
 
     @Override
     public boolean isInterceptorBinding(Class<? extends Annotation> paramClass) {
-        // TODO Auto-generated method stub
-        return false;
+        // TODO ?
+        return paramClass.isAnnotationPresent(InterceptorBinding.class);
     }
 
     @Override
     public boolean isNormalScope(Class<? extends Annotation> paramClass) {
-        // TODO Auto-generated method stub
-        return false;
+        return BeanImpl.NORMAL_SCOPES.contains(paramClass);
     }
 
     @Override
@@ -256,8 +266,7 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
 
     @Override
     public boolean isScope(Class<? extends Annotation> paramClass) {
-        // TODO Auto-generated method stub
-        return false;
+        return BeanImpl.SCOPES.contains(paramClass);
     }
 
     @Override
@@ -310,11 +319,30 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         return subList;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public <T> Set<ObserverMethod<? super T>> resolveObserverMethods(T paramT,
-            Annotation... paramArrayOfAnnotation) {
-        // TODO Auto-generated method stub
-        return null;
+    public <T> Set<ObserverMethod<? super T>> resolveObserverMethods(T event,
+            Annotation... expectedQualifiers) {
+
+        Set<ObserverMethod<? super T>> observerMethods = Sets.newHashSet();
+        for (Bean<?> bean : beans) {
+            BlinkAnnotatedType<?> annotatedType = ((BlinkBean<?>) bean).getAnnotatedType();
+            for (AnnotatedMethod<?> method : annotatedType.getMethods()) {
+                if (method.getParameters().size() == 1 && method.getParameters().get(1).isAnnotationPresent(Observes.class)) {
+                    AnnotatedParameter param = method.getParameters().get(0);
+                    Set<Annotation> paramQualifiers = param.getAnnotations();
+                    if (((Class) param.getBaseType()).isAssignableFrom(event.getClass())
+                            && paramQualifiers.containsAll(Sets
+                                    .newHashSet(expectedQualifiers))) {
+                        Object beanInstance = getReference(bean, bean.getBeanClass(),
+                                createCreationalContext(bean));
+                        observerMethods.add(new ObserverMethodImpl(bean, beanInstance,
+                                method));
+                    }
+                }
+            }
+        }
+        return observerMethods;
     }
 
     @Override

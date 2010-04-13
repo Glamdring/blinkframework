@@ -62,10 +62,10 @@ public class InstanceImpl<T> implements Instance<T> {
         return select(typeLiteral.getType(), qualifiers);
     }
 
-    private <U extends T> Instance<U> select(Type subtype,
+    private <U extends T> Instance<U> select(Type type,
             Annotation... qualifiers) {
         if (this.qualifiers.contains(AnyLiteral.INSTANCE)) {
-            return new InstanceImpl<U>(beanManager, injectionPoint, subtype, Sets.newHashSet(qualifiers));
+            return new InstanceImpl<U>(beanManager, injectionPoint, type, Sets.newHashSet(qualifiers));
         } else {
             throw new BlinkException("Cannot dynamically select the instnace type unless it is annotated with @Any");
         }

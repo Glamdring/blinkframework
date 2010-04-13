@@ -64,13 +64,14 @@ public class BeanImpl<T> implements BlinkBean<T> {
             .getName());
 
     public static final Set<Class<? extends Annotation>> SCOPES = new HashSet<Class<? extends Annotation>>();
-
+    public static final Set<Class<? extends Annotation>> NORMAL_SCOPES = new HashSet<Class<? extends Annotation>>();
     private static final Class<? extends Annotation> DEFAULT_SCOPE = ApplicationScoped.class;
     static {
-        SCOPES.add(ApplicationScoped.class);
-        SCOPES.add(SessionScoped.class);
-        SCOPES.add(RequestScoped.class);
-        SCOPES.add(ConversationScoped.class);
+        NORMAL_SCOPES.add(ApplicationScoped.class);
+        NORMAL_SCOPES.add(SessionScoped.class);
+        NORMAL_SCOPES.add(RequestScoped.class);
+        NORMAL_SCOPES.add(ConversationScoped.class);
+        SCOPES.addAll(NORMAL_SCOPES);
         SCOPES.add(Dependent.class);
     }
 
@@ -98,6 +99,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
     private Map<Method, List<Interceptor<?>>> methodInterceptors = Maps
             .newHashMap();
+    @SuppressWarnings("unchecked")
     private Map<AnnotatedMethod, Set<Annotation>> methodInterceptorBindings = Maps
             .newHashMap();
 
@@ -425,6 +427,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
         initDecorators();
     }
 
+    @SuppressWarnings("unchecked")
     private void initInterceptorBindings() {
         interceptorBindings = ClassUtils.getMetaAnnotations(
                 getBeanAnnotations(), InterceptorBinding.class);
@@ -514,29 +517,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
     }
 
     private void initQualifiers() {
-        qualifiers = getQualifiers(getBeanAnnotations());
-    }
-
-    protected Set<Annotation> getQualifiers(Set<Annotation> beanAnnotations) {
-        Set<Annotation> qualifiers = Sets.newHashSet();
-        for (Annotation annotation : beanAnnotations) {
-            if (annotation.annotationType()
-                    .isAnnotationPresent(Qualifier.class)) {
-                qualifiers.add(annotation);
-            }
-        }
-
-        if (qualifiers.size() == 0
-                || (qualifiers.size() == 1 && qualifiers.iterator().next()
-                        .annotationType() == Named.class)) {
-            qualifiers.add(DefaultLiteral.INSTANCE);
-        }
-
-        if (!qualifiers.contains(NewLiteral.INSTANCE)) {
-            qualifiers.add(AnyLiteral.INSTANCE);
-        }
-
-        return qualifiers;
+        qualifiers = ClassUtils.getQualifiers(getBeanAnnotations());
     }
 
     protected Set<Annotation> getBeanAnnotations() {
