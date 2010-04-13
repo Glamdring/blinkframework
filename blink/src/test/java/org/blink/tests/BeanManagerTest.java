@@ -14,6 +14,8 @@ import junit.framework.Assert;
 
 import org.blink.beans.BlinkBean;
 import org.blink.beans.decorators.DecoratedBean;
+import org.blink.beans.events.EventConsumer;
+import org.blink.beans.events.EventProducer;
 import org.blink.beans.injection.BeanToInject;
 import org.blink.beans.injection.First;
 import org.blink.beans.injection.SampleBean;
@@ -44,7 +46,7 @@ public class BeanManagerTest {
     @SuppressWarnings("unchecked")
     private Object getBean(BeanManager manager, String name) {
         Bean bean = manager.getBeans(name).iterator().next();
-        Object b = bean.create(manager.createCreationalContext(bean));
+        Object b = manager.getReference(bean, bean.getBeanClass(), manager.createCreationalContext(bean));
         return b;
     }
 
@@ -159,5 +161,16 @@ public class BeanManagerTest {
     public void postConstructTest() {
         SampleBean bean = (SampleBean) getBean("sampleBean");
         Assert.assertTrue(bean.isInitialized());
+    }
+
+    @Test
+    public void eventTest() {
+        BeanManager manager = deployAndGetManager();
+        EventProducer eventProducer = (EventProducer) getBean(manager, "eventProducer");
+        eventProducer.fireEvent();
+
+        EventConsumer consumer = (EventConsumer) getBean(manager, "eventConsumer");
+
+        Assert.assertTrue("Event hasn't been consumed", consumer.isEventHandled());
     }
 }
