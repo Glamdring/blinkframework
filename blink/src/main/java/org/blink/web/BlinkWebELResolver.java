@@ -17,9 +17,14 @@ public class BlinkWebELResolver extends BlinkELResolver {
 
     @Override
     public ConfigurableBeanManager getBeanManager() {
-        // TODO check if JSF is on classpath, otherwise use a thread-local
-        // instance of ServletContext, set by a RequestListener
-        return new FacesBeanManagerProvider().getBeanManager();
+        try {
+            Class.forName("javax.faces.context.FacesContext");
+            return new FacesBeanManagerProvider().getBeanManager();
+        } catch (Throwable t) {
+            return (ConfigurableBeanManager) RequestListener.currentContext
+                    .get().getAttribute(StartupListener.BEAN_MANAGER_KEY);
+        }
+
     }
 
     /**
