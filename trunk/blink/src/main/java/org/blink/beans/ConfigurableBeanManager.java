@@ -11,4 +11,6 @@ public interface ConfigurableBeanManager extends BeanManager {
     void addContext(Context context);
 
     void initialize(Set<Bean<?>> beans);
+
+    void destroy();
 }
