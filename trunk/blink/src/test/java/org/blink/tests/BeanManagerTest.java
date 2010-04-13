@@ -26,6 +26,7 @@ import org.blink.beans.producer.Consumer;
 import org.blink.beans.producer.NonBean;
 import org.blink.beans.stereotypes.StereotypedBean;
 import org.blink.core.BeanDeployer;
+import org.blink.exceptions.BlinkException;
 import org.junit.Test;
 
 public class BeanManagerTest {
@@ -140,5 +141,23 @@ public class BeanManagerTest {
         Assert.assertEquals("Decorator message on incorrect position", "Transaction decorated", msgs.get(1));
 
         TransactionHolder.getCurrentTrsanctionLog().clear();
+    }
+
+    @Test
+    public void instanceTest() {
+        SampleBean bean = (SampleBean) getBean("sampleBean");
+        Assert.assertEquals(BeanToInject.class, bean.getInstanceInstance().getClass());
+    }
+
+    @Test(expected=BlinkException.class)
+    public void instanceExceptionTest() {
+        SampleBean bean = (SampleBean) getBean("sampleBean");
+        bean.getInstance2().select(new AnnotationLiteral<First>(){});
+    }
+
+    @Test
+    public void postConstructTest() {
+        SampleBean bean = (SampleBean) getBean("sampleBean");
+        Assert.assertTrue(bean.isInitialized());
     }
 }

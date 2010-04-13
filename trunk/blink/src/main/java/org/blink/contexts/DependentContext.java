@@ -1,9 +1,12 @@
 package org.blink.contexts;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.context.spi.Contextual;
+
+import com.google.common.collect.Maps;
 
 public class DependentContext extends AbstractContext {
 
@@ -23,4 +26,13 @@ public class DependentContext extends AbstractContext {
        return Dependent.class;
     }
 
+    @Override
+    protected Map<Contextual<?>, Object> getContextualInstances() {
+        return Maps.newHashMap();
+    }
+
+    @Override
+    public boolean isActive() {
+        return true;
+    }
 }

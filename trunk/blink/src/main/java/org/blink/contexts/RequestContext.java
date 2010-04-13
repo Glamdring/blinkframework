@@ -37,4 +37,8 @@ public class RequestContext extends AbstractContext {
        contextualInstances.get().put(contextual, instance);
     }
 
+    @Override
+    protected Map<Contextual<?>, Object> getContextualInstances() {
+        return contextualInstances.get();
+    }
 }

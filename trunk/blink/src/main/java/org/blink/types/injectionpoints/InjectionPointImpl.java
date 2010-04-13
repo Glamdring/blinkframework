@@ -13,6 +13,8 @@ import java.util.Set;
 
 import javax.decorator.Delegate;
 import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.AnnotatedCallable;
 import javax.enterprise.inject.spi.AnnotatedMember;
@@ -24,6 +26,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.blink.beans.BlinkBean;
 import org.blink.beans.ConfigurableBeanManager;
 import org.blink.beans.CreationalContextImpl;
+import org.blink.beans.InstanceImpl;
 import org.blink.exceptions.BlinkException;
 import org.blink.exceptions.DefinitionException;
 import org.blink.utils.ClassUtils;
@@ -165,24 +168,35 @@ public class InjectionPointImpl<T> implements BlinkInjectionPoint<T> {
                 + "; ";
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void inject(T instance, ConfigurableBeanManager manager,
             CreationalContext<T> creationalContext) {
 
         Set<Annotation> qualifiers = getQualifiers();
-        Set<Bean<?>> beans = manager.getBeans(getType(), qualifiers
-                .toArray(new Annotation[qualifiers.size()]));
 
-        if (beans.size() != 1) {
-            throw new DefinitionException("Exactly one bean expected for type "
-                    + getType() + " and qualifiers: "
-                    + ArrayUtils.toString(Arrays.asList(qualifiers))
-                    + " but found " + beans.size());
+        Object objectToInject = null;
+
+        // in case this is an Instance, instantiate the instance holder
+        if (getType() == Instance.class) {
+            //TODO by spec this should be a bean.
+            Instance<T> instanceHolder = new InstanceImpl<T>(manager, this);
+            objectToInject = instanceHolder;
+        } else {
+            Set<Bean<?>> beans = manager.getBeans(getType(), qualifiers
+                    .toArray(new Annotation[qualifiers.size()]));
+
+            if (beans.size() != 1) {
+                throw new DefinitionException("Exactly one bean expected for type "
+                        + getType() + " and qualifiers: "
+                        + ArrayUtils.toString(Arrays.asList(qualifiers))
+                        + " but found " + beans.size());
+            }
+            Bean<?> bean = beans.iterator().next();
+            objectToInject = manager.getReference(bean, getType(),
+                    ((CreationalContextImpl<?>) creationalContext)
+                            .createChildContext(bean));
         }
-        Bean<?> bean = beans.iterator().next();
-        Object objectToInject = manager.getReference(bean, getType(),
-                ((CreationalContextImpl<?>) creationalContext)
-                        .createChildContext(bean));
         Field field = (Field) getMember();
         field.setAccessible(true);
         try {
