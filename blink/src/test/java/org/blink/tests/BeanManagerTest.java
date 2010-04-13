@@ -171,6 +171,12 @@ public class BeanManagerTest {
 
         EventConsumer consumer = (EventConsumer) getBean(manager, "eventConsumer");
 
-        Assert.assertTrue("Event hasn't been consumed", consumer.isEventHandled());
+        Assert.assertTrue("Event hasn't been consumed", consumer
+                .isEventHandled());
+        Assert.assertFalse("Observer with no qualifiers consumed the event",
+                consumer.isNoQualifiersEventHandled());
+        Assert.assertFalse(
+                        "Observer with mismatched qualifiers has wrongly consumed the event",
+                        consumer.isUnmachingQualifiersEventHandled());
     }
 }
