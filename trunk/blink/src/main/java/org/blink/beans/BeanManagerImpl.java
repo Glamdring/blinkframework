@@ -328,7 +328,7 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         for (Bean<?> bean : beans) {
             BlinkAnnotatedType<?> annotatedType = ((BlinkBean<?>) bean).getAnnotatedType();
             for (AnnotatedMethod<?> method : annotatedType.getMethods()) {
-                if (method.getParameters().size() == 1 && method.getParameters().get(1).isAnnotationPresent(Observes.class)) {
+                if (method.getParameters().size() == 1 && method.getParameters().get(0).isAnnotationPresent(Observes.class)) {
                     AnnotatedParameter param = method.getParameters().get(0);
                     Set<Annotation> paramQualifiers = param.getAnnotations();
                     if (((Class) param.getBaseType()).isAssignableFrom(event.getClass())
