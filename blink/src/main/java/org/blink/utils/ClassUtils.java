@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.decorator.Decorator;
+import javax.enterprise.inject.Stereotype;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.inject.Named;
 import javax.inject.Qualifier;

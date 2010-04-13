@@ -238,7 +238,7 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     @Override
     public Set<Annotation> getStereotypeDefinition(
             Class<? extends Annotation> clazz) {
-        return ClassUtils.getMetaAnnotations(Sets.newHashSet(clazz.getAnnotations()), Stereotype.class);
+        return null;
     }
 
     @Override
@@ -260,8 +260,7 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
 
     @Override
     public boolean isQualifier(Class<? extends Annotation> paramClass) {
-        // TODO Auto-generated method stub
-        return false;
+        return paramClass.isAnnotationPresent(Qualifier.class);
     }
 
     @Override
@@ -271,8 +270,7 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
 
     @Override
     public boolean isStereotype(Class<? extends Annotation> paramClass) {
-        // TODO Auto-generated method stub
-        return false;
+        return paramClass.isAnnotationPresent(Stereotype.class);
     }
 
     @Override
