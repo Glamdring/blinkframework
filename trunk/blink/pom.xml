@@ -86,6 +86,7 @@
             <groupId>javax.el</groupId>
             <artifactId>el-api</artifactId>
             <version>1.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.collections</groupId>
@@ -112,7 +113,7 @@
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>2.5</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

@@ -10,8 +10,8 @@
 
     <navigation-rule>
         <navigation-case>
-            <from-outcome>registrationSuccessScreen</from-outcome>
-            <to-view-id>/registrationSuccess.jsp</to-view-id>
+            <from-outcome>newArticle</from-outcome>
+            <to-view-id>/newArticle.jsp</to-view-id>
         </navigation-case>
     </navigation-rule>
 
