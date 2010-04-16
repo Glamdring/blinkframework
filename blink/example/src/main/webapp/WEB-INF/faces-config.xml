@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <faces-config xmlns="http://java.sun.com/xml/ns/javaee"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_1_2.xsd"
-    version="1.2">
+    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd"
+    version="2.0">
 
     <application>
         <el-resolver>org.blink.web.BlinkWebELResolver</el-resolver>
@@ -10,8 +10,15 @@
 
     <navigation-rule>
         <navigation-case>
-            <from-outcome>newArticle</from-outcome>
-            <to-view-id>/newArticle.jsp</to-view-id>
+            <from-outcome>article</from-outcome>
+            <to-view-id>/article.xhtml</to-view-id>
+        </navigation-case>
+    </navigation-rule>
+
+    <navigation-rule>
+        <navigation-case>
+            <from-outcome>articlesList</from-outcome>
+            <to-view-id>/articles.xhtml</to-view-id>
         </navigation-case>
     </navigation-rule>
 

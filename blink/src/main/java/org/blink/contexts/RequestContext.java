@@ -18,7 +18,6 @@ public class RequestContext extends AbstractContext {
 
     {
         contextualInstances = new ThreadLocal<Map<Contextual<?>, Object>>();
-        contextualInstances.set(new ConcurrentHashMap<Contextual<?>, Object>());
     }
 
     @Override
@@ -29,16 +28,22 @@ public class RequestContext extends AbstractContext {
     @SuppressWarnings("unchecked")
     @Override
     protected <T> T getContextualInstance(Contextual<T> contextual) {
-        return (T) contextualInstances.get().get(contextual);
+        return (T) getContextualInstances().get(contextual);
     }
 
     @Override
     protected <T> void putContextualInstance(Contextual<T> contextual, T instance) {
-       contextualInstances.get().put(contextual, instance);
+       getContextualInstances().put(contextual, instance);
     }
 
     @Override
     protected Map<Contextual<?>, Object> getContextualInstances() {
-        return contextualInstances.get();
+        Map<Contextual<?>, Object> map = contextualInstances.get();
+        if (map == null) {
+            map = new ConcurrentHashMap<Contextual<?>, Object>();
+            contextualInstances.set(map);
+        }
+
+        return map;
     }
 }
