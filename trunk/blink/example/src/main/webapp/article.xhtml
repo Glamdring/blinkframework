@@ -4,8 +4,11 @@
     xmlns:h="http://java.sun.com/jsf/html"
     xmlns:f="http://java.sun.com/jsf/core">
 
+    <h:form>
         Title: <h:inputText value="#{articlesBean.currentArticle.title}" />
         <br />
-        <h:inputTextarea value="#{articlesBean.currentArticle.text}" />
-        <h:commandButton action="#{articlesBean.saveArticle}" />
+        <h:inputTextarea value="#{articlesBean.currentArticle.text}" row="15" cols="30" />
+        <br />
+        <h:commandButton action="#{articlesBean.saveArticle}" value="Save" />
+    </h:form>
 </html>

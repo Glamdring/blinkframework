@@ -5,11 +5,13 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.blink.example.model.Article;
 import org.blink.example.service.ArticleService;
 
 @RequestScoped
+@Named
 public class ArticlesBean {
 
     private Article currentArticle;
@@ -27,7 +29,7 @@ public class ArticlesBean {
     public String newArticle() {
         currentArticle = new Article();
 
-        return "newArticle";
+        return "article";
     }
 
     public String saveArticle() {
@@ -45,5 +47,13 @@ public class ArticlesBean {
 
     public void setArticles(List<Article> articles) {
         this.articles = articles;
+    }
+
+    public Article getCurrentArticle() {
+        return currentArticle;
+    }
+
+    public void setCurrentArticle(Article currentArticle) {
+        this.currentArticle = currentArticle;
     }
 }

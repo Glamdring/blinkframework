@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core">
+
+    <h:form>
+        <h:commandLink value="New article" action="#{articlesBean.newArticle}" />
+        <ui:repeat value="#{articlesBean.articles}" var="article">
+            <h1>#{article.title}</h1>
+            <h:outputText value="#{article.date}">
+                <f:convertDateTime pattern="dd.MM.yyyy hh:mm" />
+            </h:outputText>
+            <h:commandLink action="article" value=" [edit] ">
+                <f:setPropertyActionListener target="#{articlesBean.currentArticle}" value="#{article}" />
+            </h:commandLink>
+            <h:commandLink action="#{articlesBean.deleteArticle}" value="[delete]">
+                <f:setPropertyActionListener target="#{articlesBean.currentArticle}" value="#{article}" />
+            </h:commandLink>
+            <br />
+            <h:outputText value="#{article.text}" />
+            <hr />
+        </ui:repeat>
+    </h:form>
+</html>
