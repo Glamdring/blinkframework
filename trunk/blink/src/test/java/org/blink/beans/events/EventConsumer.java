@@ -12,14 +12,14 @@ public class EventConsumer {
     private boolean unmachingQualifiersEventHandled;
     private boolean noQualifiersEventHandled;
 
-    public void observes(@Observes @EventQualifier TestEvent event) {
+    public void observes(@Observes @EventQualifier SampleEvent event) {
         eventHandled = true;
     }
 
-    public void observesUnmatching(@Observes @First TestEvent event) {
+    public void observesUnmatching(@Observes @First SampleEvent event) {
         unmachingQualifiersEventHandled = true;
     }
-    public void observesNoQualifiers(@Observes TestEvent event) {
+    public void observesNoQualifiers(@Observes SampleEvent event) {
         noQualifiersEventHandled = true;
     }
 

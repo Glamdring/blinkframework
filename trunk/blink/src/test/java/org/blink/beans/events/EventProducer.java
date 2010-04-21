@@ -8,10 +8,10 @@ import javax.inject.Named;
 public class EventProducer {
 
     @Inject @EventQualifier
-    private Event<TestEvent> event;
+    private Event<SampleEvent> event;
 
     public void fireEvent() {
-        TestEvent evt = new TestEvent();
+        SampleEvent evt = new SampleEvent();
         event.fire(evt);
     }
 }
