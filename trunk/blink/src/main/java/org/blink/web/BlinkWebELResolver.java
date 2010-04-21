@@ -21,7 +21,7 @@ public class BlinkWebELResolver extends BlinkELResolver {
             Class.forName("javax.faces.context.FacesContext");
             return new FacesBeanManagerProvider().getBeanManager();
         } catch (Throwable t) {
-            return (ConfigurableBeanManager) RequestListener.currentContext
+            return (ConfigurableBeanManager) RequestListener.getCurrentContext()
                     .get().getAttribute(StartupListener.BEAN_MANAGER_KEY);
         }
 

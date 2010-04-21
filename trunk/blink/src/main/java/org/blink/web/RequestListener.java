@@ -6,7 +6,7 @@ import javax.servlet.ServletRequestListener;
 
 public class RequestListener implements ServletRequestListener {
 
-    public static ThreadLocal<ServletContext> currentContext = new ThreadLocal<ServletContext>();
+    private static ThreadLocal<ServletContext> currentContext = new ThreadLocal<ServletContext>();
 
     @Override
     public void requestDestroyed(ServletRequestEvent arg0) {
@@ -19,4 +19,11 @@ public class RequestListener implements ServletRequestListener {
         currentContext.set(evt.getServletContext());
     }
 
+    public static ThreadLocal<ServletContext> getCurrentContext() {
+        return currentContext;
+    }
+
+    public static void setCurrentContext(ThreadLocal<ServletContext> currentContext) {
+        RequestListener.currentContext = currentContext;
+    }
 }

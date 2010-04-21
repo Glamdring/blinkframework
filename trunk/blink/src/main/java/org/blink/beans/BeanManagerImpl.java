@@ -48,7 +48,8 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
 
     private Map<Class<?>, AnnotatedType<?>> annotatedTypes = Maps.newHashMap();
 
-    private Map<Contextual<?>, CreationalContext<?>> creationalContexts = Maps.newHashMap();
+    private Map<Contextual<?>, CreationalContext<?>> creationalContexts = Maps
+            .newHashMap();
 
     public BeanManagerImpl() {
 
@@ -74,7 +75,8 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         Collections.sort(decorators, new Comparator<Decorator<?>>() {
             @Override
             public int compare(Decorator<?> d1, Decorator<?> d2) {
-                return ((DecoratorBean) d1).getIndex() - ((DecoratorBean) d2).getIndex();
+                return ((DecoratorBean) d1).getIndex()
+                        - ((DecoratorBean) d2).getIndex();
             }
         });
     }
@@ -93,15 +95,16 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
 
     private void initAnnotatedTypes() {
         for (Bean<?> bean : beans) {
-            annotatedTypes.put(bean.getBeanClass(), AnnotatedTypeImpl.create(bean.getBeanClass()));
+            annotatedTypes.put(bean.getBeanClass(), AnnotatedTypeImpl
+                    .create(bean.getBeanClass()));
         }
     }
 
     public Set<Bean<?>> getBeans() {
         return beans;
     }
-    private Map<Class<? extends Annotation>, Context> contexts =
-        new ConcurrentHashMap<Class<? extends Annotation>, Context>();
+
+    private Map<Class<? extends Annotation>, Context> contexts = new ConcurrentHashMap<Class<? extends Annotation>, Context>();
 
     @Override
     public void addContext(Context context) {
@@ -111,7 +114,8 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     @SuppressWarnings("unchecked")
     @Override
     public <T> AnnotatedType<T> createAnnotatedType(Class<T> clazz) {
-        AnnotatedType<T> annotatedType = (AnnotatedType<T>) annotatedTypes.get(clazz);
+        AnnotatedType<T> annotatedType = (AnnotatedType<T>) annotatedTypes
+                .get(clazz);
         if (annotatedType == null) {
             annotatedType = AnnotatedTypeImpl.create(clazz);
         }
@@ -122,8 +126,9 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     @Override
     public <T> CreationalContext<T> createCreationalContext(
             Contextual<T> contextual) {
-        //TODO consider whether caching creationalcontexts is a good idea
-        CreationalContext<T> ctx = (CreationalContext<T>) creationalContexts.get(contextual);
+        // TODO consider whether caching creationalcontexts is a good idea
+        CreationalContext<T> ctx = (CreationalContext<T>) creationalContexts
+                .get(contextual);
         if (ctx == null) {
             ctx = new CreationalContextImpl<T>(contextual);
         }
@@ -136,13 +141,16 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     public <T> InjectionTarget<T> createInjectionTarget(
             AnnotatedType<T> annotatedType) {
 
-        //TODO ?? create another constructor of injection target?
+        // TODO ?? create another constructor of injection target?
 
-        Set<Annotation> qualifiers = ClassUtils.getMetaAnnotations(annotatedType.getAnnotations(), Qualifier.class);
-        Set<Bean<?>> beans = getBeans(annotatedType.getBaseType(), qualifiers.toArray(new Annotation[qualifiers.size()]));
+        Set<Annotation> qualifiers = ClassUtils.getMetaAnnotations(
+                annotatedType.getAnnotations(), Qualifier.class);
+        Set<Bean<?>> beans = getBeans(annotatedType.getBaseType(), qualifiers
+                .toArray(new Annotation[qualifiers.size()]));
 
         if (beans.size() == 1) {
-            return new InjectionTargetImpl<T>((BlinkBean<T>) beans.iterator().next());
+            return new InjectionTargetImpl<T>((BlinkBean<T>) beans.iterator()
+                    .next());
         } else {
             // TODO throw definition exception
             return null;
@@ -150,10 +158,10 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     }
 
     @Override
-    public void fireEvent(Object event,
-            Annotation... qualifiers) {
+    public void fireEvent(Object event, Annotation... qualifiers) {
 
-        Set<ObserverMethod<? super Object>> observerMethods = resolveObserverMethods(event, qualifiers);
+        Set<ObserverMethod<? super Object>> observerMethods = resolveObserverMethods(
+                event, qualifiers);
         for (ObserverMethod<? super Object> observerMethod : observerMethods) {
             observerMethod.notify(event);
         }
@@ -177,11 +185,12 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     }
 
     @Override
-    public Set<Bean<?>> getBeans(Type type,
-            Annotation... qualifiers) {
+    public Set<Bean<?>> getBeans(Type type, Annotation... qualifiers) {
         Set<Bean<?>> subset = new HashSet<Bean<?>>();
         for (Bean<?> bean : beans) {
-            if (bean.getTypes().contains(type) && bean.getQualifiers().containsAll(Arrays.asList(qualifiers))) {
+            if (bean.getTypes().contains(type)
+                    && bean.getQualifiers().containsAll(
+                            Arrays.asList(qualifiers))) {
                 subset.add(bean);
             }
         }
@@ -193,11 +202,13 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     public Context getContext(Class<? extends Annotation> contextType) {
         Context ctx = contexts.get(contextType);
         if (ctx == null) {
-            throw new IllegalStateException("No context of type " + contextType + " found");
+            throw new IllegalStateException("No context of type " + contextType
+                    + " found");
         }
 
         if (!ctx.isActive()) {
-           throw new IllegalStateException("Context of type " + contextType + " is not active");
+            throw new IllegalStateException("Context of type " + contextType
+                    + " is not active");
         }
 
         return ctx;
@@ -212,13 +223,15 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     @Override
     public Object getInjectableReference(InjectionPoint injectionPoint,
             CreationalContext<?> creationalContext) {
-        return getReference(injectionPoint.getBean(), injectionPoint.getType(), creationalContext);
+        return getReference(injectionPoint.getBean(), injectionPoint.getType(),
+                creationalContext);
     }
 
     @Override
     public Set<Annotation> getInterceptorBindingDefinition(
             Class<? extends Annotation> clazz) {
-        return ClassUtils.getMetaAnnotations(Sets.newHashSet(clazz.getAnnotations()), InterceptorBinding.class);
+        return ClassUtils.getMetaAnnotations(Sets.newHashSet(clazz
+                .getAnnotations()), InterceptorBinding.class);
     }
 
     @Override
@@ -231,7 +244,8 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     @Override
     public Object getReference(Bean<?> bean, Type type,
             CreationalContext<?> creationalContext) {
-        return getContext(bean.getScope()).get((Contextual) bean, creationalContext);
+        return getContext(bean.getScope()).get((Contextual) bean,
+                creationalContext);
     }
 
     @Override
@@ -290,7 +304,8 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
         }
 
         for (Decorator decorator : decorators) {
-            if (decorator.getDelegateQualifiers().containsAll(Arrays.asList(qualifiers))
+            if (decorator.getDelegateQualifiers().containsAll(
+                    Arrays.asList(qualifiers))
                     && decorator.getDecoratedTypes().containsAll(types)) {
                 subList.add(decorator);
             }
@@ -307,8 +322,9 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
 
         List<Interceptor<?>> subList = Lists.newArrayList();
         for (Interceptor interceptor : interceptors) {
-            if (interceptor.intercepts(interceptionType) &&
-                    interceptor.getInterceptorBindings().containsAll(Arrays.asList(interceptorBindings))) {
+            if (interceptor.intercepts(interceptionType)
+                    && interceptor.getInterceptorBindings().containsAll(
+                            Arrays.asList(interceptorBindings))) {
                 subList.add(interceptor);
             }
         }
@@ -323,18 +339,22 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
 
         Set<ObserverMethod<? super T>> observerMethods = Sets.newHashSet();
         for (Bean<?> bean : beans) {
-            BlinkAnnotatedType<?> annotatedType = ((BlinkBean<?>) bean).getAnnotatedType();
+            BlinkAnnotatedType<?> annotatedType = ((BlinkBean<?>) bean)
+                    .getAnnotatedType();
             for (AnnotatedMethod<?> method : annotatedType.getMethods()) {
-                if (method.getParameters().size() == 1 && method.getParameters().get(0).isAnnotationPresent(Observes.class)) {
+                if (method.getParameters().size() == 1
+                        && method.getParameters().get(0).isAnnotationPresent(
+                                Observes.class)) {
                     AnnotatedParameter param = method.getParameters().get(0);
                     Set<Annotation> paramQualifiers = param.getAnnotations();
-                    if (((Class) param.getBaseType()).isAssignableFrom(event.getClass())
+                    if (((Class) param.getBaseType()).isAssignableFrom(event
+                            .getClass())
                             && paramQualifiers.containsAll(Sets
                                     .newHashSet(expectedQualifiers))) {
-                        Object beanInstance = getReference(bean, bean.getBeanClass(),
-                                createCreationalContext(bean));
-                        observerMethods.add(new ObserverMethodImpl(bean, beanInstance,
-                                method));
+                        Object beanInstance = getReference(bean, bean
+                                .getBeanClass(), createCreationalContext(bean));
+                        observerMethods.add(new ObserverMethodImpl(bean,
+                                beanInstance, method));
                     }
                 }
             }
@@ -359,11 +379,8 @@ public class BeanManagerImpl implements ConfigurableBeanManager {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (Bean<?> bean : beans) {
-            sb.append("Bean name: "
-                    + bean.getName()
-                    + "; class: "
-                    + bean.getBeanClass()
-                    + "; types: "
+            sb.append("Bean name: " + bean.getName() + "; class: "
+                    + bean.getBeanClass() + "; types: "
                     + ArrayUtils.toString(bean.getTypes().toArray())
                     + "; qualifiers: "
                     + ArrayUtils.toString(bean.getQualifiers().toArray())

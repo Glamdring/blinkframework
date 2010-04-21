@@ -21,11 +21,6 @@ public class InterceptorBean<T> extends BeanImpl<T> implements Interceptor<T> {
         this.index = index;
     }
 
-    @Override
-    public void initialize() {
-        super.initialize();
-    }
-
     public int getIndex() {
         return index;
     }

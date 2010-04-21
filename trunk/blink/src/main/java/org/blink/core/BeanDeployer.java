@@ -74,7 +74,8 @@ public class BeanDeployer {
         Set<Bean<?>> producers = Sets.newHashSet();
         for (Method m : bean.getBeanClass().getMethods()) {
             if (m.isAnnotationPresent(Produces.class)) {
-                ProducerMethodBean<?> producer = new ProducerMethodBean(bean, m, m.getReturnType(), bean.getBeanManager());
+                ProducerMethodBean<?> producer = new ProducerMethodBean(bean,
+                        m, m.getReturnType(), bean.getBeanManager());
                 producer.initialize();
                 producers.add(producer);
             }
@@ -82,7 +83,8 @@ public class BeanDeployer {
 
         for (Field f : bean.getBeanClass().getDeclaredFields()) {
             if (f.isAnnotationPresent(Produces.class)) {
-                ProducerFieldBean<?> producer = new ProducerFieldBean(bean, f, f.getType(), bean.getBeanManager());
+                ProducerFieldBean<?> producer = new ProducerFieldBean(bean, f,
+                        f.getType(), bean.getBeanManager());
                 producer.initialize();
                 producers.add(producer);
             }
@@ -128,7 +130,7 @@ public class BeanDeployer {
      * @param beans
      *            deployed beans
      */
-    private void validate(Set<Bean<?>> beans) {
+    protected void validate(Set<Bean<?>> beans) {
         if (beans != null && beans.size() > 0) {
             for (Bean<?> bean : beans) {
 
@@ -165,17 +167,17 @@ public class BeanDeployer {
      */
     protected void deployFromXML() {
 
-        //TODO implement
-        Iterator<URL> it = null;//xmlLocations.iterator();
+        // TODO implement
+        Iterator<URL> it = null; // xmlLocations.iterator();
 
         while (it.hasNext()) {
             URL fileURL = it.next();
-            String fileName = fileURL.getFile();
+            //String fileName = fileURL.getFile();
             InputStream fis = null;
             try {
                 fis = fileURL.openStream();
 
-                //this.xmlConfigurator.configure(fis, fileName);
+                // this.xmlConfigurator.configure(fis, fileName);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } finally {
