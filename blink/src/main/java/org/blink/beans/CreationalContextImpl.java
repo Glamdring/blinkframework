@@ -33,7 +33,7 @@ public class CreationalContextImpl<T> implements CreationalContext<T>, Serializa
     public T getIncompleteInstance(Contextual<?> contextual) {
         if (this.contextual == contextual && incompleteInstance != null) {
             return incompleteInstance;
-        } else if (parent != null){
+        } else if (parent != null) {
             return (T) parent.getIncompleteInstance(contextual);
         } else {
             return null;

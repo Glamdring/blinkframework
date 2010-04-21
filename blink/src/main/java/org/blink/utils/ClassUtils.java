@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.decorator.Decorator;
-import javax.enterprise.inject.Stereotype;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.inject.Named;
 import javax.inject.Qualifier;
@@ -186,36 +185,6 @@ public final class ClassUtils {
         }
 
         return true;
-
-    }
-
-    public static Class<?> getClassFromName(String name) {
-        Class<?> clazz = null;
-
-        try {
-            ClassLoader loader = ClassUtils.getCurrentClassLoader();
-            clazz = loader.loadClass(name);
-
-            return clazz;
-
-        } catch (ClassNotFoundException e) {
-            try {
-                clazz = ClassUtils.class.getClassLoader().loadClass(name);
-
-                return clazz;
-
-            } catch (ClassNotFoundException e1) {
-                try {
-                    clazz = ClassLoader.getSystemClassLoader().loadClass(name);
-
-                    return clazz;
-
-                } catch (ClassNotFoundException e2) {
-                    return null;
-                }
-
-            }
-        }
 
     }
 
@@ -476,9 +445,8 @@ public final class ClassUtils {
 
         Class<?>[] et = method.getExceptionTypes();
 
-        if (et.length == 1) {
-            if (et[0].equals(Exception.class))
-                return true;
+        if (et.length == 1 && et[0].equals(Exception.class)) {
+            return true;
         }
 
         return false;
@@ -607,12 +575,29 @@ public final class ClassUtils {
         return Package.getPackage(packageName);
     }
 
-    public static Set<Annotation> getMetaAnnotations(Set<Annotation> annotations,
+    public static Map<Class<?>, Type> buildTypeMap(Set<Type> types) {
+        Map<Class<?>, Type> map = new HashMap<Class<?>, Type>();
+        for (Type type : types) {
+            if (type instanceof Class<?>) {
+                map.put((Class<?>) type, type);
+            } else if (type instanceof ParameterizedType) {
+                if (((ParameterizedType) type).getRawType() instanceof Class<?>) {
+                    map.put((Class<?>) ((ParameterizedType) type).getRawType(),
+                            type);
+                }
+            }
+        }
+        return map;
+    }
+
+    public static Set<Annotation> getMetaAnnotations(
+            Set<Annotation> annotations,
             Class<? extends Annotation> metaAnnotationType) {
         Set<Annotation> subset = Sets.newHashSet();
 
         for (Annotation annotation : annotations) {
-            if (annotation.annotationType().isAnnotationPresent(metaAnnotationType)) {
+            if (annotation.annotationType().isAnnotationPresent(
+                    metaAnnotationType)) {
                 subset.add(annotation);
             }
         }
@@ -915,7 +900,7 @@ public final class ClassUtils {
                 return false;
             }
             return isAssignableForParametrizedCheckArguments(beanTypeArgs,
-                        requiredTypeArgs);
+                    requiredTypeArgs);
         }
 
         return false;
@@ -934,20 +919,14 @@ public final class ClassUtils {
                     && ClassUtils.isParametrizedType(beanTypeArg)) {
                 return checkBeanAndRequiredTypeisParametrized(beanTypeArg,
                         requiredTypeArg);
-            }
-            // Required type is wildcard
-            else if (ClassUtils.isWildCardType(requiredTypeArg)) {
+            }  else if (ClassUtils.isWildCardType(requiredTypeArg)) { // Required type is wildcard
                 return checkRequiredTypeisWildCard(beanTypeArg, requiredTypeArg);
-            }
-            // Required type is actual type
-            else if (requiredTypeArg instanceof Class
-                    && ClassUtils.isTypeVariable(beanTypeArg)) {
+            } else if (requiredTypeArg instanceof Class
+                    && ClassUtils.isTypeVariable(beanTypeArg)) { // Required type is actual type
                 return checkRequiredTypeIsClassAndBeanTypeIsVariable(
                         beanTypeArg, requiredTypeArg);
-            }
-            // Required type is Type variable
-            else if (ClassUtils.isTypeVariable(requiredTypeArg)
-                    && ClassUtils.isTypeVariable(beanTypeArg)) {
+            } else if (ClassUtils.isTypeVariable(requiredTypeArg)
+                    && ClassUtils.isTypeVariable(beanTypeArg)) { // Required type is Type variable
                 return checkBeanTypeAndRequiredIsTypeVariable(beanTypeArg,
                         requiredTypeArg);
             } else if ((beanTypeArg instanceof Class)
@@ -1271,10 +1250,8 @@ public final class ClassUtils {
             result = clazz.isPrimitive();
         }
 
-        if (!result) {
-            if (Enum.class.isAssignableFrom(clazz)) {
-                return true;
-            }
+        if (!result && Enum.class.isAssignableFrom(clazz)) {
+            return true;
         }
 
         return result;
@@ -1503,15 +1480,10 @@ public final class ClassUtils {
         Validate.notNull(clazz);
         Type type = clazz.getGenericSuperclass();
 
-        if (type != null) {
-            if (type instanceof ParameterizedType) {
-                ParameterizedType pt = (ParameterizedType) type;
+        if (type != null && type instanceof ParameterizedType) {
+            ParameterizedType pt = (ParameterizedType) type;
 
-                // if (checkParametrizedType(pt))
-                // {
-                return pt.getActualTypeArguments();
-                // }
-            }
+            return pt.getActualTypeArguments();
         }
 
         return new Type[0];
@@ -1588,8 +1560,7 @@ public final class ClassUtils {
 
         Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
-            if (AnnotationUtil
-                    .hasAnnotation(field.getAnnotations(), annotation)) {
+            if (hasAnnotation(field.getAnnotations(), annotation)) {
                 return field;
             }
 
@@ -1597,6 +1568,32 @@ public final class ClassUtils {
 
         return null;
 
+    }
+
+    public static boolean hasAnnotation(Annotation[] anns,
+            Class<? extends Annotation> annotation) {
+        return getAnnotation(anns, annotation) != null;
+    }
+
+    /**
+     * get the annotation of the given type from the array.
+     *
+     * @param anns
+     * @param annotation
+     * @return the Annotation with the given type or <code>null</code> if no
+     *         such found.
+     */
+    public static <T extends Annotation> T getAnnotation(Annotation[] anns,
+            Class<T> annotation) {
+        Validate.notNull(anns, "anns argument can not be null");
+        Validate.notNull(annotation, "annotation argument can not be null");
+        for (Annotation annot : anns) {
+            if (annot.annotationType().equals(annotation)) {
+                return (T) annot;
+            }
+        }
+
+        return null;
     }
 
     public static Field[] getFieldsWithType(Class<?> clazz, Type type) {
@@ -1753,6 +1750,7 @@ public final class ClassUtils {
             return null;
         }
     }
+
     public static boolean isDecorator(Class clazz) {
         return clazz.isAnnotationPresent(Decorator.class);
     }

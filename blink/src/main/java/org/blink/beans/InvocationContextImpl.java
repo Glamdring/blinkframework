@@ -22,7 +22,7 @@ public class InvocationContextImpl implements InvocationContext {
     private ConfigurableBeanManager beanManager;
     private CreationalContext creationalContext;
 
-    public InvocationContextImpl(){
+    public InvocationContextImpl() {
 
     }
 

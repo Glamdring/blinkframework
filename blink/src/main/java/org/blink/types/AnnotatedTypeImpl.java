@@ -13,7 +13,7 @@ import javax.enterprise.inject.spi.AnnotatedMethod;
 
 import com.google.common.collect.Sets;
 
-public class AnnotatedTypeImpl<T> extends AnnotatedImpl implements
+public final class AnnotatedTypeImpl<T> extends AnnotatedImpl implements
         BlinkAnnotatedType<T> {
 
     private final Class<T> clazz;

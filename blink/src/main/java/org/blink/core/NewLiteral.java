@@ -3,7 +3,7 @@ package org.blink.core;
 import javax.enterprise.inject.New;
 import javax.enterprise.util.AnnotationLiteral;
 
-public class NewLiteral extends AnnotationLiteral<New> implements New {
+public final class NewLiteral extends AnnotationLiteral<New> implements New {
 
     public static final New INSTANCE = new NewLiteral();
 

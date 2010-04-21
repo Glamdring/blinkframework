@@ -2,7 +2,6 @@ package org.blink.beans;
 
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -37,13 +36,9 @@ import javax.enterprise.inject.spi.InterceptionType;
 import javax.enterprise.inject.spi.Interceptor;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Qualifier;
 import javax.interceptor.InterceptorBinding;
 import javax.interceptor.InvocationContext;
 
-import org.blink.core.AnyLiteral;
-import org.blink.core.DefaultLiteral;
-import org.blink.core.NewLiteral;
 import org.blink.exceptions.BlinkException;
 import org.blink.exceptions.DefinitionException;
 import org.blink.types.AnnotatedTypeImpl;
@@ -52,7 +47,6 @@ import org.blink.types.injectionpoints.BlinkInjectionPoint;
 import org.blink.types.injectionpoints.ConstructorInjectionPoint;
 import org.blink.types.injectionpoints.InjectionPointImpl;
 import org.blink.utils.ClassUtils;
-import org.blink.utils.ReflectionUtils;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -140,10 +134,9 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
     private void initTypes() {
         if (getAnnotatedType().isAnnotationPresent(Typed.class)) {
-            this.types = getTypedTypes(ReflectionUtils
+            this.types = getTypedTypes(ClassUtils
                     .buildTypeMap(getAnnotatedType().getTypeClosure()),
-                    getAnnotatedType().getJavaClass(), getAnnotatedType()
-                            .getAnnotation(Typed.class));
+                     getAnnotatedType().getAnnotation(Typed.class));
         } else {
             this.types = new HashSet<Type>(getAnnotatedType().getTypeClosure());
             if (beanClass.isInterface()) {
@@ -152,8 +145,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
         }
     }
 
-    private Set<Type> getTypedTypes(Map<Class<?>, Type> typeClosure,
-            Class<?> rawType, Typed typed) {
+    private Set<Type> getTypedTypes(Map<Class<?>, Type> typeClosure, Typed typed) {
         Set<Type> types = new HashSet<Type>();
         for (Class<?> specifiedClass : typed.value()) {
             if (!typeClosure.containsKey(specifiedClass)) {

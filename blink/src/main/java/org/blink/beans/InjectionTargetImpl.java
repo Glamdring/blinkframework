@@ -124,7 +124,7 @@ public class InjectionTargetImpl<T> implements InjectionTarget<T> {
             injectableField.inject(instance, beanManager, ctx);
         }
 
-        for (BlinkInjectionPoint<T> initializer: initializerMethods) {
+        for (BlinkInjectionPoint<T> initializer : initializerMethods) {
             initializer.invoke(instance, beanManager, ctx);
         }
     }

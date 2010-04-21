@@ -111,7 +111,7 @@ public class ClasspathBeanScanner implements BeanScanner {
                         if (clazz.getName().equals(className)) {
                             return idx;
                         }
-                        idx ++;
+                        idx++;
                     }
                 }
             } finally {
