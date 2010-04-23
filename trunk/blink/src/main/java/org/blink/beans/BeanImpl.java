@@ -93,7 +93,7 @@ public class BeanImpl<T> implements BlinkBean<T> {
 
     private Map<Method, List<Interceptor<?>>> methodInterceptors = Maps
             .newHashMap();
-    @SuppressWarnings("unchecked")
+
     private Map<AnnotatedMethod, Set<Annotation>> methodInterceptorBindings = Maps
             .newHashMap();
 
