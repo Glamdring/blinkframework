@@ -1,10 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <parent>
-        <artifactId>blink</artifactId>
-        <groupId>org.blink</groupId>
-        <version>1.0</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.blink</groupId>
@@ -12,6 +7,7 @@
     <name>blink-example</name>
     <description>Blink example application</description>
     <packaging>war</packaging>
+    <version>0.0.1-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
@@ -31,28 +27,4 @@
             <version>1.0</version>
         </dependency>
     </dependencies>
-
-    <!-- build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>prepare-package</phase>
-                        <goals><goal>copy</goal></goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.blink</groupId>
-                                    <artifactId>blink</artifactId>
-                                    <version>1.0</version>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build-->
 </project>
