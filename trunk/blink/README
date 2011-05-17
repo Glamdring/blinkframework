@@ -1,12 +1,13 @@
 1. In order to obtain the jar artifact, you have to:
 1.1. Have a maven-enabled IDE or install maven separately (http://maven.apache.org/)
-1.2. Run "mvn package" (in the root directory of the project)
+1.2. Run "mvn install" (in the root directory of the project)
 1.3. Get the .jar from the "target" directory
 
 2. In order to run the example application, you have to:
 1.1. Have a maven-enabled IDE or install maven separately
-1.2. Run "mvn package" inside the "examples" directory
-1.3. Obtain the .war file from the "target" directory
-1.4. Deploy the war file to a Tomcat installation on your system (http://tomcat.apache.org/).
+1.2. Install the jar in the local repository (by executing the steps in 1. above)
+1.3. Run "mvn package" inside the "examples" directory
+1.4. Obtain the .war file from the "target" directory
+1.5. Deploy the war file to a Tomcat installation on your system (http://tomcat.apache.org/).
         (It doesn't need to be Tomcat - it can be any servlet container)
-1.5. Open http://localhost:8080/example/articles.xhtml
+1.6. Open http://localhost:8080/example/articles.xhtml
