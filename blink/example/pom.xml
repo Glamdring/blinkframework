@@ -24,6 +24,12 @@
             <artifactId>jstl</artifactId>
             <version>1.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.blink</groupId>
+            <artifactId>blink</artifactId>
+            <type>jar</type>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
     <!-- build>
